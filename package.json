@@ -1,26 +1,35 @@
 {
   "name": "@rocket-doc/app",
-  "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "license": "MIT",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc --p ./tsconfig.build.json && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prepublishOnly": "yarn build"
   },
-  "dependencies": {
-    "@nextui-org/react": "^2.4.8",
-    "@tabler/icons-react": "^3.19.0",
-    "@types/markdown-it": "^14.1.2",
-    "framer-motion": "^11.11.9",
-    "markdown-it": "^14.1.0",
+  "peerDependencies": {
+    "openapi3-ts": "^4.4.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.27.0"
+    "tailwindcss": "^3.4.14"
+  },
+  "dependencies": {
+    "@tabler/icons-react": "^3.19.0",
+    "antd": "^5.22.1",
+    "fast-xml-parser": "^4.5.0",
+    "prismjs": "^1.29.0",
+    "react-markdown": "^9.0.1",
+    "react-router-dom": "^6.27.0",
+    "react-simple-code-editor": "^0.14.1",
+    "yaml": "^2.6.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.11.1",
+    "@types/node": "^22.9.0",
+    "@types/prismjs": "^1.26.5",
     "@types/react": "^18.3.10",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.2",
@@ -29,12 +38,22 @@
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.12",
     "globals": "^15.9.0",
-    "json-schema-to-typescript": "^15.0.2",
     "openapi3-ts": "^4.4.0",
     "postcss": "^8.4.47",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "rollup-plugin-visualizer": "^5.12.0",
     "tailwindcss": "^3.4.14",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.7.0",
-    "vite": "^5.4.8"
-  }
+    "vite": "^5.4.8",
+    "vite-plugin-dts": "^4.3.0",
+    "vite-plugin-lib-inject-css": "^2.1.1"
+  },
+  "main": "dist/index.es.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "packageManager": "yarn@4.4.1+sha512.f825273d0689cc9ead3259c14998037662f1dcd06912637b21a450e8da7cfeb4b1965bbee73d16927baa1201054126bc385c6f43ff4aa705c8631d26e12460f1"
 }

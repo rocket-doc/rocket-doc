@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-get: #4caf50;
+  --color-post: #2196f3;
+  --color-put: #ff9800;
+  --color-delete: #f44336;
+  --color-patch: #9c27b0;
+  --color-options: #795548;
+  --color-head: #607d8b;
+  --color-connect: #3f51b5;
+  --color-trace: #009688;
+}
+
+.httpmethod-get {
+  color: var(--color-get);
+}
+.httpmethod-post {
+  color: var(--color-post);
+}
+.httpmethod-put {
+  color: var(--color-put);
+}
+.httpmethod-delete {
+  color: var(--color-delete);
+}
+.httpmethod-patch {
+  color: var(--color-patch);
+}
+.httpmethod-options {
+  color: var(--color-options);
+}
+.httpmethod-head {
+  color: var(--color-head);
+}
+.httpmethod-connect {
+  color: var(--color-connect);
+}
+.httpmethod-trace {
+  color: var(--color-trace);
+}
+
+body.dark {
+  background: #2c2c2c;
+}
