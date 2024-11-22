@@ -1,12 +1,32 @@
 # Rocket Doc
-<img src="doc/rocket-doc.png" alt="Rocket Doc Logo" width="200"/>
+<img src="doc/rocket-doc.png" alt="Rocket Doc Logo" width="100"/>
 
 Rocket Doc is a React app that generates documentation from an OpenAPI 3.1 files.
 
 The goal of this project is to provide a simple and easy-to-use tool, with minimal dependencies, to allow for a maintainable and customizable documentation generation.
 
 *Here is an example of the UI with Swagger Petstore example*
-![Example UI](doc/ui.png)
+![Example UI](doc/screenshot.png)
+
+# Table of Contents
+
+- [Rocket Doc](#rocket-doc)
+- [Table of Contents](#table-of-contents)
+- [Usage](#usage)
+  - [As a React Component](#as-a-react-component)
+  - [Directly in the Browser](#directly-in-the-browser)
+- [Configuration](#configuration)
+  - [AppConfig](#appconfig)
+  - [Extensions](#extensions)
+- [Depencies](#depencies)
+  - [Building blocks](#building-blocks)
+  - [For code parsing \& formatting](#for-code-parsing--formatting)
+- [Features](#features)
+- [Contributing](#contributing)
+  - [Installation](#installation)
+  - [Running the Application](#running-the-application)
+- [License](#license)
+
 
 # Usage
 
@@ -64,11 +84,51 @@ You can also use Rocket Doc directly in the browser by including the necessary s
 </html>
 ```
 
+# Configuration
+
+You can configure the Rocket Doc component using the following options, either as props in the React component or as attributes in the DOM element. All options are optional.
+**Object attributes (in the DOM element) should be passed as JSON strings.**
+
+
+| Prop name                    | Attribute Name                  | Type                     | Description                                                                                                                            |
+| ---------------------------- | ------------------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `config`                     | `config`                        | `AppConfig`              | The application configuration object. This can include various settings to customize the behavior and appearance of the documentation. |
+| `logo`                       | `logo`                          | `string`                 | The URL of the logo image to be displayed in the navigation bar.                                                                       |
+| `specUrl`                    | `specUrl`                       | `string`                 | The URL of the OpenAPI specification file to be loaded.                                                                                |
+| `specRequiredSecurity`       | `spec-required-security`        | OpenAPI `SecurityScheme` | The security scheme required to access the OpenAPI specification. It matches the OpenAPI specification for a security scheme.          |
+| `specRequiredSecurityScopes` | `spec-required-security-scopes` | `string[]`               | The scopes required for the security scheme.                                                                                           |
+| `showFileImport`             | `show-file-import`              | `boolean`                | A boolean flag to show or hide the file import option in the UI.                                                                       |
+| `extensions`                 | `extensions`                    | `Extensions`             | An object containing extensions to customize the behavior of the documentation.                                                        |
+
+## AppConfig
+
+The AppConfig object allows you to customize various settings for the Rocket Doc application. Below are the available options:
+
+| Option Name            | Type                  | Default        | Description                                                                              |
+| ---------------------- | --------------------- | -------------- | ---------------------------------------------------------------------------------------- |
+| `defaultExpandedDepth` | `number`              | `2`            | The default depth to which the documentation tree should be expanded.                    |
+| `routerType`           | `'hash' \| 'browser'` | `'hash'`       | The type of router to use for navigation.                                                |
+| `basePath`             | `string`              | `''`           | The base path for the application. Useful if the app is served from a subdirectory.      |
+| `defaultTitle`         | `string`              | `'Rocket Doc'` | The default title for the documentation pages. Before it is loaded from the OpenAPI file |
+
+
+## Extensions
+
+The Extensions object allows you to customize the rendering of the Rocket Doc application.
+An extension is a function that takes arguments and returns a component to render.
+Below are the available options:
+
+| Property     | Type                                                                                                                                                | Description                                                                                                                                                                                                                                                    |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| fieldDetails | `(req: { name: string; schema: SchemaObject; fullSpec: OpenAPIObject }) => { component: (null \| React.ComponentType); disablePadding?: boolean; }` | This function is called for every field in a schema.<br/>It takes the name of the field, the OAPI schema and the OAPI fullSpec. It must return a react component (`null` for no row to be rendered), and an optional boolean to disable left aligment padding. |
+
+
+
 # Depencies
 
 The goal of this project is to have minimal dependencies. The following are the dependencies used in this project:
 
-#### Building blocks
+## Building blocks
 
 - [React](https://reactjs.org/)
 - [Vite](https://vitejs.dev/)
@@ -78,7 +138,7 @@ The goal of this project is to have minimal dependencies. The following are the 
 - [React Router DOM](https://www.npmjs.com/package/react-router-dom)
 
 
-#### For code parsing & formatting
+## For code parsing & formatting
 - [PrismJS](https://prismjs.com/)
 - [Code Editor](https://www.npmjs.com/package/react-simple-code-editor) # Edition overlay for PrismJS
 - [Fast XML Parser](https://www.npmjs.com/package/fast-xml-parser)
@@ -123,6 +183,6 @@ yarn dev
 
 This will start the application and you can view it in your browser.
 
-## License
+# License
 
 This project is licensed under the MIT License.

@@ -26,8 +26,8 @@ export type AppProps = {
   config?: AppConfig;
   logo?: string;
   specUrl?: string;
-  specRequiredSecurity?: SecuritySchemeObject; // wip
-  specRequiredSecurityScopes?: string[]; // wip
+  specRequiredSecurity?: SecuritySchemeObject;
+  specRequiredSecurityScopes?: string[];
   showFileImport?: boolean;
   extensions?: Extensions;
 };
