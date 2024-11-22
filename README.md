@@ -1,7 +1,7 @@
 # Rocket Doc
-<img src="doc/rocket-doc.png" alt="Rocket Doc Logo" width="100"/>
-
 Rocket Doc is a React app that generates documentation from an OpenAPI 3.1 files.
+
+<img src="doc/rocket-doc.png" alt="Rocket Doc Logo" width="100"/>
 
 The goal of this project is to provide a simple and easy-to-use tool, with minimal dependencies, to allow for a maintainable and customizable documentation generation.
 
