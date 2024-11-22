@@ -76,7 +76,7 @@ export function TryIt({ operation, spec }: TryItProps) {
     fetch(`${server.basePath}${operation.path}${query ? `?${query}` : ""}`, {
       method: operation.method.toUpperCase(),
       headers: headers,
-      body: undefined, //TODO: body ? body.body : undefined
+      body: body?.body,
     }).catch((e) => {
       setResponse(null);
       setResponseError(e ? new Error(e.toString()) : new Error("Unknown error"))
