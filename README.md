@@ -53,7 +53,7 @@ You can also use Rocket Doc directly in the browser by including the necessary s
     <title>Rocket Doc</title>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script crossorigin src="https://unpkg.com/@rocket-doc/app@1.0.0/dist/index.umd.js"></script>
+    <script crossorigin src="https://unpkg.com/@rocket-doc/app@1.0.1/dist/index.umd.js"></script>
   </head>
   <body>
     <rocket-doc
@@ -101,6 +101,10 @@ The goal of this project is to have minimal dependencies. The following are the 
 - [ ] Support for OAuth 2.0
 - [ ] Customizable theme
 
+# Contributing
+
+Feel free to submit issues or pull requests for any improvements or bug fixes.
+
 ## Installation
 
 To install the necessary dependencies, run:
@@ -118,16 +122,6 @@ yarn dev
 ```
 
 This will start the application and you can view it in your browser.
-
-## Usage
-
-1. Start the development server using `yarn dev`.
-2. Open your browser and navigate to the provided URL to view the generated documentation.
-3. Upload the OpenAPI 3.1 from file
-
-## Contributing
-
-Feel free to submit issues or pull requests for any improvements or bug fixes.
 
 ## License
 
