@@ -11,6 +11,7 @@ import '@/index.css';
 import { AppConfig, DefaultConfig, Extensions, UserConfig } from "@/lib/config";
 import { ConfigContext, ExtensionsContext, ModalContext, SpecContext, UserConfigContext } from "@/lib/context";
 import usePersistentState from "@/lib/hooks/persistant";
+import { specificationCredentialsDefaultSchemeName, specificationCredentialsKey } from "@/lib/local_storage";
 import { ConfigProvider as AntdConfigProvider, Button, Spin, Splitter, theme } from "antd";
 import { OpenAPIObject, SecuritySchemeObject } from "openapi3-ts/oas31";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -39,7 +40,6 @@ export default function RocketDoc({ logo, config, extensions, showFileImport, sp
   const [navbarSize, setNavbarSize] = usePersistentState("navbarSize", 0.21111);
 
   useBodyDarkClass(userConfig)
-
 
   const { savedCreds, setSavedCreds, specError, reloadSpec, loadingSpec } = useSpecUrlWithSecurity(specUrl, setSpec, specRequiredSecurity)
 
@@ -73,10 +73,10 @@ export default function RocketDoc({ logo, config, extensions, showFileImport, sp
                             <div className="flex justify-center items-center flex-col min-h-screen">
                               <h1 className="text-2xl mb-2 text-center"> Credentials are required to access OpenAPI specification</h1>
                               <SecurityRequirement
-                                requirement={{ "__spec": specRequiredSecurityScopes ?? [] }}
+                                requirement={{ specificationCredentialsDefaultSchemeName: specRequiredSecurityScopes ?? [] }}
                                 savedCreds={savedCreds}
                                 setSavedCreds={setSavedCreds}
-                                schemes={{ "__spec": specRequiredSecurity }}
+                                schemes={{ specificationCredentialsDefaultSchemeName: specRequiredSecurity }}
                                 typeAsName
                               />
                               <div className="my-2 flex justify-center items-center flex-col">
@@ -130,7 +130,7 @@ function useSpecUrlWithSecurity(
   security: SecuritySchemeObject | undefined,
 ) {
   const [specError, setError] = useState("")
-  const [savedCreds, setSavedCreds] = usePersistentState<SavedCredentials>("rocketdoc_spec_creds", {});
+  const [savedCreds, setSavedCreds] = usePersistentState<SavedCredentials>(specificationCredentialsKey, {});
   const [loadingSpec, setLoadingSpec] = useState(false);
 
   const authInfos = useMemo<AuthInformations>(() => {
@@ -138,9 +138,9 @@ function useSpecUrlWithSecurity(
       return {}
     }
     return updateAuthValueFromSchemeValue(
-      "__spec",
+      specificationCredentialsDefaultSchemeName,
       security,
-      getSavedCredential("__spec", security, savedCreds),
+      getSavedCredential(specificationCredentialsDefaultSchemeName, security, savedCreds),
       {}
     )
   }, [savedCreds])
@@ -189,7 +189,7 @@ function useSpecUrlWithSecurity(
   // On mount, fetch the spec if no credentials are required
   // or if credentials are required and are saved
   useEffect(() => {
-    if (!specUrl || (security && !getSavedCredential('__spec', security, savedCreds))) return
+    if (!specUrl || (security && !getSavedCredential(specificationCredentialsDefaultSchemeName, security, savedCreds))) return
     reloadSpec()
   }, [])
 

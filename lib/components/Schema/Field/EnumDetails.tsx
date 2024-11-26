@@ -20,7 +20,6 @@ export function EnumDetails({ enumDetails, depth }: EnumDetailsProps): ReactNode
           size="small"
           showHeader={false}
           rowHoverable={false}
-          className="nopadding"
           columns={[
             {
               title: "Name",
