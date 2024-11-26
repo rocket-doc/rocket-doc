@@ -3,8 +3,10 @@ import { GenerateExampleStringForSchema } from "@/lib/example";
 import { Operation } from "@/lib/operations";
 import { GetRef } from "@/lib/ref";
 import { Card, Select } from "antd";
+import { XMLBuilder, XMLParser } from 'fast-xml-parser';
 import { ExampleObject, OpenAPIObject, RequestBodyObject } from "openapi3-ts/oas31";
 import { useEffect, useMemo, useState } from "react";
+import { parse as parseYAML, stringify as stringifyYAML } from 'yaml';
 
 export type MediaType = string;
 export type RequestBody = {
@@ -23,12 +25,12 @@ export function TryIt_Body({ operation, spec, setBody: setBodyParent }: TryItBod
     if (!operation || !spec || !operation.requestBody) return null;
     return GetRef(operation.requestBody, spec)[0]
   }, [operation, spec]);
-  const { bodyMediaType, bodyMediaTypes, setBodyMediaType, hasBody, body, setBody } = useMediaTypes(operationBody, spec);
+  const { bodyMediaType, bodyMediaTypes, setBodyMediaType, hasBody, body, rawBody, setBody } = useMediaTypes(operationBody, spec);
   const bodyLanguage = useBodyHighlightLanguage(bodyMediaType);
 
   useEffect(() => {
-    setBodyParent({ body, mediaType: bodyMediaType });
-  }, [body, bodyMediaType]);
+    setBodyParent({ body: rawBody, mediaType: bodyMediaType });
+  }, [rawBody, bodyMediaType]);
 
   if (!hasBody) return null;
 
@@ -130,7 +132,7 @@ function useMediaTypes(
     setBodies(bodies);
   }, [bodyMediaTypes, operationBody, spec]);
 
-  return { bodyMediaType, bodyMediaTypes, setBodyMediaType, examples, currentExampleNames, hasBody, body: bodies[bodyMediaType] || "", setBody: (body: string) => setBodies({ ...bodies, [bodyMediaType]: body }) };
+  return { bodyMediaType, bodyMediaTypes, setBodyMediaType, examples, currentExampleNames, hasBody, body: bodies[bodyMediaType] || "", rawBody: minimize(bodies[bodyMediaType], bodyMediaType), setBody: (body: string) => setBodies({ ...bodies, [bodyMediaType]: body }) };
 }
 
 export function mediaTypeToLanguage(mediaType: MediaType | null): Language {
@@ -141,5 +143,25 @@ export function mediaTypeToLanguage(mediaType: MediaType | null): Language {
       return Language.XML;
     default:
       return Language.PLAIN;
+  }
+}
+
+function minimize(value: string, mediaType: MediaType): string {
+  try {
+    switch (mediaType) {
+      case "application/json":
+        return JSON.stringify(JSON.parse(value));
+      case "application/xml":
+        return (new XMLBuilder()).build((new XMLParser()).parse(value)) as string;
+      case "application/yaml":
+      case "application/yml":
+      case "application/x-yaml":
+      case "text/yaml":
+        return stringifyYAML(parseYAML(value));
+      default:
+        return value;
+    }
+  } catch {
+    return value;
   }
 }

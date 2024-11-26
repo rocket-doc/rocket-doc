@@ -1,9 +1,11 @@
+import { IconCheck, IconCopy } from "@tabler/icons-react";
+import { XMLBuilder, XMLParser } from "fast-xml-parser";
 import * as PrismJS from "prismjs";
 import 'prismjs/components/prism-json';
 import 'prismjs/components/prism-xml-doc';
 import 'prismjs/components/prism-yaml';
 import 'prismjs/themes/prism-tomorrow.css';
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { langMap, Language } from "./CodeEditor";
 
@@ -33,6 +35,9 @@ export function CodeViewer({
         case Language.YAML:
           setCodeFormatted(stringifyYaml(parseYaml(code), { indent: 2 }));
           break;
+        case Language.XML:
+          setCodeFormatted((new XMLBuilder()).build((new XMLParser()).parse(code)));
+          break;
         default:
           setCodeFormatted(code);
       }
@@ -41,9 +46,33 @@ export function CodeViewer({
     }
   }, [code]);
 
-  return (<pre>
-    <code ref={codeRef}
-      className={`language-${langMap[language]}`}
-    >{codeFormatted}</code>
-  </pre>)
+  return (<div className="relative">
+    <Copy text={codeFormatted} />
+    <pre className="relative">
+      <code ref={codeRef}
+        className={`language-${langMap[language]}`}
+      >{codeFormatted}</code>
+    </pre>
+  </div>)
+}
+
+export function Copy({ text }: { text: string }) {
+  const [clicked, setClicked] = useState(false);
+
+  useEffect(() => {
+    if (clicked) {
+      setTimeout(() => setClicked(false), 1000);
+    }
+  }, [clicked]);
+
+  const callback = useCallback(() => {
+    setClicked(true);
+    navigator.clipboard.writeText(text)
+  }, [text])
+
+  return (
+    <div className="absolute top-0 right-0 mt-2 mr-2 cursor-pointer z-10 hover:opacity-50 transition-all" onClick={callback}>
+      {clicked ? <IconCheck className="text-white" /> : <IconCopy className="text-white" />}
+    </div>
+  )
 }

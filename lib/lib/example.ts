@@ -1,12 +1,12 @@
+import { Language } from '@/components/Code/CodeEditor';
+import { XMLBuilder } from 'fast-xml-parser';
 import {
   OpenAPIObject,
   ReferenceObject,
   SchemaObject,
 } from 'openapi3-ts/oas31';
-import { GetRef } from './ref';
-import { Language } from '@/components/Code/CodeEditor';
 import { stringify as stringifyYAML } from 'yaml';
-import { XMLBuilder } from 'fast-xml-parser';
+import { GetRef } from './ref';
 
 function GenerateExampleForSchema(
   obj: SchemaObject,
@@ -80,7 +80,7 @@ export function GenerateExampleStringForSchema(
     case Language.YAML:
       return stringifyYAML(example, { indent: 2 });
     case Language.XML:
-      return new XMLBuilder().build(example) as string;
+      return new XMLBuilder({ format: true }).build(example) as string;
     default:
       return '';
   }

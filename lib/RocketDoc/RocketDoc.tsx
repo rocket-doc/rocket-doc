@@ -163,6 +163,8 @@ function useSpecUrlWithSecurity(
         return
       }
       switch (res.headers.get("content-type")) {
+        case "application/x-yaml":
+        case "text/yaml":
         case "application/yaml":
         case "application/yml":
           res.text().then(content => {

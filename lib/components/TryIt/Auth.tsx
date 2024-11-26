@@ -3,7 +3,7 @@ import SecurityRequirement from "@/components/SecurityRequirement/SecurityRequir
 import usePersistentState from "@/lib/hooks/persistant";
 import { Operation } from "@/lib/operations";
 import { GetRef } from "@/lib/ref";
-import { Card, Select } from "antd";
+import { Collapse, Select } from "antd";
 import { OpenAPIObject, SecurityRequirementObject, SecuritySchemeObject } from "openapi3-ts/oas31";
 import { useEffect, useState } from "react";
 
@@ -57,23 +57,28 @@ export function TryIt_Auth({ operation, spec, setAuth: setParentAuth }: TryItAut
 
   if (!requirement) return null;
   return (
-    <Card title="Security" styles={{ body: { padding: "1rem", paddingTop: '0.5rem' } }}>
-      {requirements && requirements.length > 1 && <Select
-        options={requirements.map((requirement, i) => ({
-          label: Object.keys(requirement).join(" and "),
-          value: i,
-        }))}
-        defaultValue={0}
-        onChange={(v) => setRequirement(requirements[v])}
-        className="mb-2"
-      />}
-      <div>
-        <SecurityRequirement
-          schemes={schemes}
-          requirement={requirement}
-          savedCreds={savedCreds}
-          setSavedCreds={setSavedCreds}
-        />
-      </div>
-    </Card>)
+    <Collapse
+      items={[{
+        label: "Security",
+        children: (<>
+          {requirements && requirements.length > 1 && <Select
+            options={requirements.map((requirement, i) => ({
+              label: Object.keys(requirement).join(" and "),
+              value: i,
+            }))}
+            defaultValue={0}
+            onChange={(v) => setRequirement(requirements[v])}
+            className="mb-2"
+          />}
+          <div>
+            <SecurityRequirement
+              schemes={schemes}
+              requirement={requirement}
+              savedCreds={savedCreds}
+              setSavedCreds={setSavedCreds}
+            />
+          </div></>)
+      }]}
+    />
+  )
 }

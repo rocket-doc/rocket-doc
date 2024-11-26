@@ -3,7 +3,7 @@ import { GenerateExampleStringForSchema } from "@/lib/example";
 import { GetRef } from "@/lib/ref";
 import { Checkbox, Input, Select, Table } from "antd";
 import { OpenAPIObject, OperationObject, ParameterObject, SchemaObject, SchemaObjectType } from "openapi3-ts/oas31";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 export type RequestParam = {
   name: string;
@@ -49,8 +49,8 @@ export function TryIt_Parameters({ operation, spec, setParams: setParentParams }
         dataIndex: 'schema',
         key: 'schema',
         render: (_, param) => param.schema ?
-          <TryIt_Parameter parameter={param} spec={spec} setParam={(paramValue) => setParams({ ...params, [param.name + "__" + param.in]: paramValue })} /> :
-          <TryIt_ParameterWithMediaTypes parameter={param} spec={spec} setParam={(paramValue) => setParams({ ...params, [param.name + "__" + param.in]: paramValue })} />
+          <TryIt_Parameter parameter={param} spec={spec} paramValue={params[param.name + "__" + param.in] ?? null} setParam={(paramValue) => setParams({ ...params, [param.name + "__" + param.in]: paramValue })} /> :
+          <TryIt_ParameterWithMediaTypes parameter={param} spec={spec} paramValue={params[param.name + "__" + param.in] ?? null} setParam={(paramValue) => setParams({ ...params, [param.name + "__" + param.in]: paramValue })} />
       }
     ]} dataSource={operationParameters.map(p => ({ key: p.name, ...p }))} />
 }
@@ -58,15 +58,14 @@ export function TryIt_Parameters({ operation, spec, setParams: setParentParams }
 type TryItParameterProps = {
   parameter: ParameterObject;
   spec: OpenAPIObject;
+  paramValue: RequestParam | null;
   setParam: (param: RequestParam) => void;
 }
 
-function TryIt_Parameter({ parameter, spec, setParam }: TryItParameterProps) {
-  const [value, setValue] = useState("");
-
-  useEffect(() => {
-    setParam({ name: parameter.name, value, location: parameter.in });
-  }, [value]);
+function TryIt_Parameter({ parameter, spec, paramValue, setParam }: TryItParameterProps) {
+  const setParamValue = useCallback((newValue: string) => {
+    setParam({ name: parameter.name, value: newValue, location: parameter.in });
+  }, [setParam, parameter]);
 
   const schema = useMemo(() => {
     if (!parameter.schema) return null;
@@ -74,12 +73,12 @@ function TryIt_Parameter({ parameter, spec, setParam }: TryItParameterProps) {
   }, [parameter, spec]);
 
   useEffect(() => {
-    if (schema?.type !== "object") setValue(parameter.example?.toString() || "");
-    else setValue(GenerateExampleStringForSchema(schema, spec, Language.JSON))
-  }, [schema, parameter]);
+    if (schema?.type !== "object") setParamValue(parameter.example?.toString() || "");
+    else setParamValue(GenerateExampleStringForSchema(schema, spec, Language.JSON))
+  }, [schema]);
 
   if (!schema || schema.type === "null") return null;
-  return <Editor type={schema.type || "string"} value={value} setValue={setValue} />
+  return <Editor type={schema.type || "string"} value={paramValue?.value ?? ""} setValue={setParamValue} />
 }
 
 function TryIt_ParameterWithMediaTypes({ parameter, spec, setParam }: TryItParameterProps) {
@@ -136,6 +135,9 @@ function Editor({ type, value, setValue }: EditorProps) {
       return <Checkbox checked={value} onChange={(e) => setValue(e.target.checked)} />;
     case "object":
       return <CodeEditor code={value || ""} setCode={(v) => setValue(v)} language={Language.JSON} />;
+    case "array":
+      // TODO: Handle array types properly
+      return <Input placeholder={"Comma separated list"} type="text" value={value} onChange={(e) => setValue(e.target.value)} />;
     default:
       return <Input placeholder={""} type="text" value={value} onChange={(e) => setValue(e.target.value)} />;
   }

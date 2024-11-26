@@ -1,11 +1,13 @@
 import { CodeViewer } from "@/components/Code/Viewer";
 import { AuthInformations } from "@/components/SecurityRequirement/schemes";
 import { Operation } from "@/lib/operations";
+import { IconRocket } from "@tabler/icons-react";
 import { Button, Card, Collapse, Spin } from "antd";
 import { OpenAPIObject } from "openapi3-ts/oas31";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { TryIt_Auth } from "./Auth";
 import { mediaTypeToLanguage, RequestBody, TryIt_Body } from "./Body";
+import { CurlRequest } from "./Curl";
 import { RequestParam, TryIt_Parameters } from "./Parameters";
 import { ServerInformations, TryIt_Server } from "./Server";
 
@@ -28,6 +30,11 @@ export function TryIt({ operation, spec }: TryItProps) {
   const [responsePending, setResponsePending] = useState<boolean>(false);
   const [responseText, setResponseText] = useState<string | null>(null);
   const [responseTextPending, setResponseTextPending] = useState<boolean>(false);
+
+  const responseCard = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    responseCard.current?.scrollIntoView({ behavior: "smooth" });
+  }, [response]);
 
   useEffect(() => {
     setResponse(null);
@@ -67,17 +74,20 @@ export function TryIt({ operation, spec }: TryItProps) {
     setQuery(newQueryParams.toString());
   }, [parameters]);
 
+  const fetchRequest = useMemo<RequestInit>(() => ({
+    method: operation.method.toUpperCase(),
+    headers: headers,
+    body: body?.body,
+  }), [operation, headers]);
+  const fetchUrl = useMemo(() => `${server?.basePath}${operation.path}${query ? `?${query}` : ""}`, [server, operation, query]);
+
   const run = useCallback(() => {
     if (!server) {
       return;
     }
 
     setResponsePending(true);
-    fetch(`${server.basePath}${operation.path}${query ? `?${query}` : ""}`, {
-      method: operation.method.toUpperCase(),
-      headers: headers,
-      body: body?.body,
-    }).catch((e) => {
+    fetch(fetchUrl, fetchRequest).catch((e) => {
       setResponse(null);
       setResponseError(e ? new Error(e.toString()) : new Error("Unknown error"))
       setResponseText(null);
@@ -91,7 +101,7 @@ export function TryIt({ operation, spec }: TryItProps) {
         r.text().then((t) => setResponseText(t)).finally(() => setResponseTextPending(false));
       }
     }).finally(() => setResponsePending(false));
-  }, [operation, server, headers, query, body]);
+  }, [operation, fetchRequest, fetchUrl]);
 
   return (
     <div className="flex flex-col gap-2">
@@ -107,7 +117,15 @@ export function TryIt({ operation, spec }: TryItProps) {
         spec={spec}
         setBody={setBody}
       />
-      {(response || responsePending) && <Card title="Response">
+      <Collapse
+        items={[{
+          label: "Curl request",
+          key: "curl",
+          children: (<CurlRequest request={fetchRequest} url={fetchUrl} />)
+        }]}
+      />
+      <Button className="mx-auto p-5" onClick={run} disabled={responsePending}><IconRocket /> Run request</Button>
+      {(response || responsePending) && <Card title="Response" ref={responseCard}>
         {responsePending && <div> <Spin /> Waiting for response...</div>}
         {response && (
           <div>
@@ -134,7 +152,6 @@ export function TryIt({ operation, spec }: TryItProps) {
           </div>
         )}
       </Card>}
-      <Button onClick={run}>Run</Button>
     </div>
   )
 }

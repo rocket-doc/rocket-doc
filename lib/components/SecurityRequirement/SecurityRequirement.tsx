@@ -29,6 +29,7 @@ export default function SecurityRequirement({ requirement, schemes, savedCreds, 
         title: 'Value',
         render: ({ scheme, schemeName }: ParsedScheme) => <Input
           type="text"
+          key={schemeName}
           placeholder={scheme.name ?? schemeName}
           value={getSavedCredential(schemeName, scheme, savedCreds)}
           onChange={(e) => setSavedCreds(addValueToSavedCreds(schemeName, scheme, e.target.value, savedCreds))}
