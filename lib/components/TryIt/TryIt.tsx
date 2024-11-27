@@ -47,7 +47,7 @@ export function TryIt({ operation, spec }: TryItProps) {
   // Handle headers
   useEffect(() => {
     let newHeaders: Record<string, string> = {};
-    if (body) {
+    if (body && body.mediaType !== "") {
       newHeaders["Content-Type"] = body.mediaType;
     }
 
@@ -79,7 +79,14 @@ export function TryIt({ operation, spec }: TryItProps) {
     headers: headers,
     body: body?.body,
   }), [operation, headers]);
-  const fetchUrl = useMemo(() => `${server?.basePath}${operation.path}${query ? `?${query}` : ""}`, [server, operation, query]);
+
+  const fetchUrl = useMemo(() => {
+    let url = `${server?.basePath}${operation.path}`;
+    const variables = Object.fromEntries(parameters.filter((p) => p.location === "path" && p.value !== "").map((p) => ([p.name, p.value])));
+    url = url.replace(/\{([^}]+)\}/g, (_, name) => variables[name] ?? "");
+
+    return `${url}${query ? `?${query}` : ""}`
+  }, [server, operation, query, parameters]);
 
   const run = useCallback(() => {
     if (!server) {

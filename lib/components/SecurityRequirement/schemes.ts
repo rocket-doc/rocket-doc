@@ -1,9 +1,13 @@
 import { SecuritySchemeObject } from "openapi3-ts/oas31";
 
+export type CredentialsType = 'apiKey' | 'basicAuth' | 'bearerAuth';
+
 export type SavedCredentials = {
-  apikeys?: Record<string, string>;
-  basicAuth?: Record<string, string>;
-  bearerAuth?: Record<string, string>;
+  [K in CredentialsType]?: Record<string, string>;
+}
+
+export type InitialCredentials = {
+  [K in CredentialsType]?: string;
 }
 
 export type AuthInformations = {
@@ -16,8 +20,8 @@ export function addValueToSavedCreds(schemeName: string, scheme: SecuritySchemeO
     case "apiKey":
       return {
         ...savedCreds,
-        apikeys: {
-          ...savedCreds.apikeys,
+        apiKey: {
+          ...savedCreds.apiKey,
           [schemeName]: value
         }
       }
@@ -49,24 +53,30 @@ export function addValueToSavedCreds(schemeName: string, scheme: SecuritySchemeO
   }
 }
 
-export function getSavedCredential(schemeName: string, scheme: SecuritySchemeObject, savedCreds: SavedCredentials): string {
+export function schemeToCredentialType(scheme: SecuritySchemeObject): CredentialsType | undefined {
   switch (scheme.type) {
     case "apiKey":
-      return savedCreds.apikeys?.[schemeName] ?? "";
+      return "apiKey";
     case "http":
       switch (scheme.scheme) {
         case "basic":
-          return savedCreds.basicAuth?.[schemeName] ?? "";
+          return "basicAuth";
         case "bearer":
-          return savedCreds.bearerAuth?.[schemeName] ?? "";
+          return
         default:
           console.warn("Unsupported http scheme", scheme.scheme)
-          return "";
+          return undefined
       }
     default:
       console.warn("Unsupported scheme type", scheme.type)
-      return "";
+      return undefined;
   }
+}
+
+export function getSavedCredential(schemeName: string, scheme: SecuritySchemeObject, savedCreds: SavedCredentials): string {
+  const credsType = schemeToCredentialType(scheme);
+  if (!credsType) return "";
+  return savedCreds[credsType]?.[schemeName] ?? "";
 }
 
 export function updateAuthValueFromSchemeValue(schemeName: string, scheme: SecuritySchemeObject, value: string, authValue: AuthInformations): AuthInformations {

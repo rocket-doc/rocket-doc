@@ -18,10 +18,11 @@ export type OperationURLParams = {
 }
 
 export function Operation() {
-  const operation = useOperationFromRouter();
   const { spec } = useContext(SpecContext);
+  const operation = useOperationFromRouter();
 
-  if (!operation || !spec) return <Error title="Spec not loaded yet" />;
+  if (!spec) return <Error title="Spec not loaded yet" />;
+  if (!operation) return <Error title="Operation not found in current spec" />;
 
   return (
     <div className="m-2">

@@ -17,6 +17,7 @@ export function Parameters({ parameters }: ParametersProps) {
     pagination={false}
     dataSource={parameters.map((p, i) => ({ key: i, ...GetRef(p, spec)[0] }))}
     rootClassName="overflow-x-auto"
+    size="small"
     columns={[
       {
         key: 'name',
@@ -24,7 +25,8 @@ export function Parameters({ parameters }: ParametersProps) {
         render: (_, param) => (<>
           <Typography.Text code>{param.name}</Typography.Text>
           {param.description && <div className="pl-2" ><small>{param.description}</small></div>}
-        </>)
+        </>),
+        className: "!p-1",
       },
       {
         key: 'schema',
@@ -35,12 +37,14 @@ export function Parameters({ parameters }: ParametersProps) {
               <Schema schema={content.schema} spec={spec} />
             </Card>
           ))
-        )
+        ),
+        className: "!p-1",
       },
       {
         key: 'in',
         title: 'Location',
-        render: (_, param) => <span className="italic text-gray-500">{param.in}</span>
+        render: (_, param) => <span className="italic text-gray-500">{param.in}</span>,
+        className: "!p-1",
       }
     ]}
 

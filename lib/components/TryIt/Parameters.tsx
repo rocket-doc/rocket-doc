@@ -42,12 +42,14 @@ export function TryIt_Parameters({ operation, spec, setParams: setParentParams }
         title: 'Parameter',
         dataIndex: 'name',
         key: 'name',
-        render: (_, param) => <span>{param.name}</span>
+        className: "!p-1",
+        render: (_, param) => <span>{param.name}</span>,
       },
       {
         title: 'Value',
         dataIndex: 'schema',
         key: 'schema',
+        className: "!p-1",
         render: (_, param) => param.schema ?
           <TryIt_Parameter parameter={param} spec={spec} paramValue={params[param.name + "__" + param.in] ?? null} setParam={(paramValue) => setParams({ ...params, [param.name + "__" + param.in]: paramValue })} /> :
           <TryIt_ParameterWithMediaTypes parameter={param} spec={spec} paramValue={params[param.name + "__" + param.in] ?? null} setParam={(paramValue) => setParams({ ...params, [param.name + "__" + param.in]: paramValue })} />
@@ -87,14 +89,14 @@ function TryIt_ParameterWithMediaTypes({ parameter, spec, setParam }: TryItParam
 
   useEffect(() => {
     setParam({ name: parameter.name, value: values[mediaType] ?? "", location: parameter.in });
-  }, [values, mediaType, parameter]);
+  }, [values, mediaType]);
 
   const schemas = useMemo(() => {
     if (!parameter.content) return null;
     return Object.fromEntries(
       Object.entries(parameter.content).map(([mediaType, content]) => { return [mediaType, GetRef(content.schema, spec)[0]] }).filter(([_, schema]) => schema)
     ) as Record<string, SchemaObject>;
-  }, [parameter, spec]);
+  }, []);
 
   useEffect(() => {
     if (schemas && Object.keys(schemas).length > 0) {

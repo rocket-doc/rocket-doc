@@ -1,6 +1,7 @@
-import { AuthInformations, getSavedCredential, SavedCredentials, updateAuthValueFromSchemeValue } from "@/components/SecurityRequirement/schemes";
+import { AuthInformations, getSavedCredential, InitialCredentials, SavedCredentials, updateAuthValueFromSchemeValue } from "@/components/SecurityRequirement/schemes";
 import SecurityRequirement from "@/components/SecurityRequirement/SecurityRequirement";
 import usePersistentState from "@/lib/hooks/persistant";
+import { specificationCredentialsDefaultSchemeName, specificationCredentialsKey, tryItCredentialsKey } from "@/lib/local_storage";
 import { Operation } from "@/lib/operations";
 import { GetRef } from "@/lib/ref";
 import { Collapse, Select } from "antd";
@@ -16,7 +17,7 @@ type TryItAuthProps = {
 }
 
 export function TryIt_Auth({ operation, spec, setAuth: setParentAuth }: TryItAuthProps) {
-  const [savedCreds, setSavedCreds] = usePersistentState<SavedCredentials>("rocketdoc_creds", {});
+  const [savedCreds, setSavedCreds] = usePersistentState<SavedCredentials>(tryItCredentialsKey, {});
   const [authInformationsValue, setAuthInformationsValue] = useState<AuthInformations>({});
   const [schemes, setSchemes] = useState<Record<string, SecuritySchemeObject>>({});
   const [requirements, setRequirements] = useState<SecurityRequirementObject[]>([]);
@@ -60,6 +61,7 @@ export function TryIt_Auth({ operation, spec, setAuth: setParentAuth }: TryItAut
     <Collapse
       items={[{
         label: "Security",
+        forceRender: true,
         children: (<>
           {requirements && requirements.length > 1 && <Select
             options={requirements.map((requirement, i) => ({
@@ -76,9 +78,32 @@ export function TryIt_Auth({ operation, spec, setAuth: setParentAuth }: TryItAut
               requirement={requirement}
               savedCreds={savedCreds}
               setSavedCreds={setSavedCreds}
+              initialValues={getInitialAuthValuesCredentials()}
             />
           </div></>)
       }]}
     />
   )
+}
+
+// Loads values used for loading the specification file
+// and uses them as default values for the authentification
+function getInitialAuthValuesCredentials(): InitialCredentials | undefined {
+  let rawValue = localStorage.getItem(specificationCredentialsKey);
+  if (!rawValue) return undefined;
+
+  try {
+    const specificationCredentialsValues = JSON.parse(rawValue) as SavedCredentials;
+    return Object.fromEntries(
+      Object.entries(specificationCredentialsValues)
+        .map(([key, value]) => {
+          if (value?.[specificationCredentialsDefaultSchemeName]) {
+            return [key, value[specificationCredentialsDefaultSchemeName]];
+          }
+          return undefined;
+        }).filter((v) => v !== undefined))
+  } catch (e) {
+    console.error("Error while parsing specification credentials", e);
+    return undefined;
+  }
 }
