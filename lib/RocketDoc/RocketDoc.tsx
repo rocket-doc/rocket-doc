@@ -63,44 +63,47 @@ export default function RocketDoc({ logo, config, extensions, showFileImport, sp
                       />
                     </Splitter.Panel>
                     <Splitter.Panel className="h-screen overflow-y-auto ml-2">
-                      {
-                        loadingSpec ? <div className="flex justify-center items-center flex-col min-h-screen">
+                      {!spec && <div className="flex justify-center items-center flex-col min-h-screen">
+                        {specRequiredSecurity && !loadingSpec &&
+                          <>
+                            <h1 className="text-2xl mb-2 text-center"> Credentials are required to access OpenAPI specification</h1>
+                            <SecurityRequirement
+                              requirement={{ [specificationCredentialsDefaultSchemeName]: specRequiredSecurityScopes ?? [] }}
+                              savedCreds={savedCreds}
+                              setSavedCreds={setSavedCreds}
+                              schemes={{ [specificationCredentialsDefaultSchemeName]: specRequiredSecurity }}
+                              typeAsName
+                            />
+                            <div className="my-2 flex justify-center items-center flex-col">
+
+                              <Button className="my-2" onClick={reloadSpec}>Load OpenAPI</Button>
+                            </div>
+                          </>}
+                        {loadingSpec && <>
                           <h2 className="text-2xl" >Loading spec...</h2>
                           <Spin size="large" />
-                        </div> :
-                          !spec && specRequiredSecurity ?
-                            <div className="flex justify-center items-center flex-col min-h-screen">
-                              <h1 className="text-2xl mb-2 text-center"> Credentials are required to access OpenAPI specification</h1>
-                              <SecurityRequirement
-                                requirement={{ [specificationCredentialsDefaultSchemeName]: specRequiredSecurityScopes ?? [] }}
-                                savedCreds={savedCreds}
-                                setSavedCreds={setSavedCreds}
-                                schemes={{ [specificationCredentialsDefaultSchemeName]: specRequiredSecurity }}
-                                typeAsName
-                              />
-                              <div className="my-2 flex justify-center items-center flex-col">
-                                {specError && <p className="text-red-500">
-                                  {specError}
-                                </p>}
-                                <Button className="my-2" onClick={reloadSpec}>Load OpenAPI</Button>
-                              </div>
-                            </div> :
-                            <Routes>
-                              <Route path="*" element={<ErrorElement title="Not Found" message="The page you are looking for does not exist, or not for this spec" />} />
-                              <Route index element={<Home />} ErrorBoundary={ErrorBoundary} />
-                              <Route
-                                path="/operations/:method/:path"
-                                Component={Operation}
-                                ErrorBoundary={ErrorBoundary}
-                                loader={({ params }) => ({ method: params.method, path: params.path })}
-                              />
-                              <Route
-                                path="/schemas/:name"
-                                Component={SchemaRoute}
-                                ErrorBoundary={ErrorBoundary}
-                                loader={({ params }) => ({ name: params.name })}
-                              />
-                            </Routes>}
+                        </>}
+                        {specError && !loadingSpec && <p className="text-red-500">
+                          {specError}
+                        </p>}
+
+                      </div>}
+                      {spec && <Routes>
+                        <Route path="*" element={<ErrorElement title="Not Found" message="The page you are looking for does not exist, or not for this spec" />} />
+                        <Route index element={<Home />} ErrorBoundary={ErrorBoundary} />
+                        <Route
+                          path="/operations/:method/:path"
+                          Component={Operation}
+                          ErrorBoundary={ErrorBoundary}
+                          loader={({ params }) => ({ method: params.method, path: params.path })}
+                        />
+                        <Route
+                          path="/schemas/:name"
+                          Component={SchemaRoute}
+                          ErrorBoundary={ErrorBoundary}
+                          loader={({ params }) => ({ name: params.name })}
+                        />
+                      </Routes>}
                     </Splitter.Panel>
                   </Splitter>
                 </Router>

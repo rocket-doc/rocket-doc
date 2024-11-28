@@ -81,7 +81,7 @@ export function TryIt({ operation, spec }: TryItProps) {
   }), [operation, headers]);
 
   const fetchUrl = useMemo(() => {
-    let url = `${server?.basePath}${operation.path}`;
+    let url = `${server?.baseUrl}${operation.path}`;
     const variables = Object.fromEntries(parameters.filter((p) => p.location === "path" && p.value !== "").map((p) => ([p.name, p.value])));
     url = url.replace(/\{([^}]+)\}/g, (_, name) => variables[name] ?? "");
 
