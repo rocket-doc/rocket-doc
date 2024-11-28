@@ -29,7 +29,7 @@ export function useSpecUrlWithSecurity(
   // Callback to fetch documentation document
   const reloadSpec = useCallback(() => {
     if (!specUrl) return;
-    let url = new URL(specUrl)
+    let url = specUrl.startsWith('http') ? new URL(specUrl) : new URL(specUrl, window.location.origin)
     Object.entries(authInfos.query ?? {}).forEach(([key, value]) => url.searchParams.set(key, value))
     let headers = new Headers()
     Object.entries(authInfos.headers ?? {}).forEach(([key, value]) => headers.set(key, value))
