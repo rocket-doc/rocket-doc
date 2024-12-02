@@ -40,8 +40,12 @@ export default function Paths() {
 
   const [operationsByTag, taglessOperations] = useMemo(() => {
     if (!spec?.paths) return [[], []];
-    if (activeKeys === null) setActiveKeys(spec?.tags?.map(tag => tag.name) ?? [])
     const operations = ExtractOperations(spec.paths, filter);
+    if (activeKeys === null) {
+      // set active keys to all unique tags
+      // to expand all tags by default
+      setActiveKeys(Array.from(new Set(operations.map(operation => operation.tag).filter(tag => tag !== ""))))
+    }
     const operationsByTag = operations.filter(({ tag }) => tag !== "")
     const taglessOperations = operations.filter(({ tag }) => tag === "");
     if (taglessOperations.length > 0) {
@@ -52,26 +56,29 @@ export default function Paths() {
   if (!spec || !spec.paths) return null;
   return (
     <div className="flex flex-col" >
-      <Input
-        allowClear
-        placeholder="Filter operations"
-        value={filter}
-        onChange={(e) => setFilter(e.target.value)}
-        className="mx-4 mb-2 w-auto"
-        onClear={() => setFilter("")}
-      />
-      <small className="flex flex-row justify-center items-center w-full">
-        <code className="bg-slate-300 text-gray-800 px-1 rounded-md flex items-center" ><IconCommand className="inline" size={20} />K</code><span className="ml-2">for the search prompt</span>
-      </small>
+      <div className="sticky top-0 z-10 bg-gray-800 py-2 w-full flex flex-col justify-center items-center drop-shadow-md border-white">
+        <Input
+          allowClear
+          placeholder="Filter operations"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className="mx-4 mb-2 w-auto"
+          onClear={() => setFilter("")}
+        />
+        <small className="flex flex-row justify-center items-center w-full">
+          <code className="bg-slate-300 text-gray-800 px-1 rounded-md flex items-center" ><IconCommand className="inline" size={20} />K</code><span className="ml-2">for the search prompt</span>
+        </small>
 
-      <div className="flex flex-row justify-end mr-2">
-        <Tooltip className="cursor-pointer hover:opacity-70 transition-all" title="Expand all" placement="top">
-          <IconCaretDownFilled onClick={() => setActiveKeys(operationsByTag.map(({ tag }) => tag))} />
-        </Tooltip>
-        <Tooltip className="cursor-pointer hover:opacity-70 transition-all" title="Collapse all" placement="top">
-          <IconCaretUpFilled onClick={() => setActiveKeys([])} />
-        </Tooltip>
+        <div className="flex flex-row self-end mr-2">
+          <Tooltip className="cursor-pointer hover:opacity-70 transition-all" title="Expand all" placement="top">
+            <IconCaretDownFilled onClick={() => setActiveKeys(operationsByTag.map(({ tag }) => tag))} />
+          </Tooltip>
+          <Tooltip className="cursor-pointer hover:opacity-70 transition-all" title="Collapse all" placement="top">
+            <IconCaretUpFilled onClick={() => setActiveKeys([])} />
+          </Tooltip>
+        </div>
       </div>
+
 
       {taglessOperations.length > 0 && taglessOperations.map(operation => (<OperationRow key={operation.path + "_" + operation.method} operation={operation} />))}
       <Collapse

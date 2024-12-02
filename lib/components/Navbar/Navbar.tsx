@@ -3,17 +3,19 @@ import { IconBrightness, IconBrightnessFilled } from '@tabler/icons-react';
 import { Switch } from 'antd';
 import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
+import { ClearSpec } from './ClearSpec';
 import { FileLoader } from './FileLoader';
 import Paths from './Paths';
 
 type NavbarProps = {
   logo: string;
   showSpecFileLoader?: boolean;
+  showClearSpec?: boolean;
   defaultTitle: string;
 };
 
-const Navbar: React.FC<NavbarProps> = ({ logo, showSpecFileLoader, defaultTitle }) => {
-  const { spec } = useContext(SpecContext);
+const Navbar: React.FC<NavbarProps> = ({ logo, showSpecFileLoader, showClearSpec, defaultTitle }) => {
+  const { spec, setSpec } = useContext(SpecContext);
   const { config, setConfig } = useContext(UserConfigContext);
 
   return (
@@ -32,8 +34,13 @@ const Navbar: React.FC<NavbarProps> = ({ logo, showSpecFileLoader, defaultTitle 
         />
       </div>
       {showSpecFileLoader && (
-        <div className="p-4">
+        <div className='mb-1'>
           <FileLoader />
+        </div>
+      )}
+      {showClearSpec && (
+        <div className='mb-1' onClick={() => setSpec(null)}>
+          <ClearSpec />
         </div>
       )}
       <Paths />

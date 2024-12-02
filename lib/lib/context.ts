@@ -4,7 +4,7 @@ import { AppConfig, DefaultConfig, Extensions, UserConfig } from './config';
 
 export const SpecContext = createContext<{
   spec: OpenAPIObject | null;
-  setSpec: (spec: OpenAPIObject) => void;
+  setSpec: (spec: OpenAPIObject | null) => void;
 }>({
   spec: null,
   setSpec: () => { },

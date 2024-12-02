@@ -59,12 +59,13 @@ export default function RocketDoc({ logo, config, extensions, showFileImport, sp
                       <Navbar
                         logo={logo ?? rocketLogo}
                         showSpecFileLoader={showFileImport ?? true}
+                        showClearSpec={!!spec && !!specUrl && !!specRequiredSecurity}
                         defaultTitle={appConfig.defaultTitle}
                       />
                     </Splitter.Panel>
                     <Splitter.Panel className="h-screen overflow-y-auto ml-2">
                       {!spec && <div className="flex justify-center items-center flex-col min-h-screen">
-                        {specRequiredSecurity && !loadingSpec &&
+                        {!loadingSpec && specRequiredSecurity &&
                           <>
                             <h1 className="text-2xl mb-2 text-center"> Credentials are required to access OpenAPI specification</h1>
                             <SecurityRequirement
@@ -74,11 +75,10 @@ export default function RocketDoc({ logo, config, extensions, showFileImport, sp
                               schemes={{ [specificationCredentialsDefaultSchemeName]: specRequiredSecurity }}
                               typeAsName
                             />
-                            <div className="my-2 flex justify-center items-center flex-col">
-
-                              <Button className="my-2" onClick={reloadSpec}>Load OpenAPI</Button>
-                            </div>
                           </>}
+                        {!loadingSpec && <div className="my-2 flex justify-center items-center flex-col">
+                          <Button className="my-2" onClick={reloadSpec}>Load OpenAPI</Button>
+                        </div>}
                         {loadingSpec && <>
                           <h2 className="text-2xl" >Loading spec...</h2>
                           <Spin size="large" />
