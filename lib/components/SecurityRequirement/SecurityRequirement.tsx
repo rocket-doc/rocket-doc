@@ -1,6 +1,7 @@
-import { Input, Table } from "antd";
+import { Table } from "antd";
 import { SecurityRequirementObject, SecuritySchemeObject } from "openapi3-ts/oas31";
 import { useEffect } from "react";
+import { HiddenInput } from "./HiddenInput";
 import { addValueToSavedCreds, getSavedCredential, InitialCredentials, SavedCredentials, schemeToCredentialType } from "./schemes";
 
 type SecurityRequirementProps = {
@@ -47,8 +48,7 @@ export default function SecurityRequirement({ requirement, schemes, savedCreds, 
       {
         key: 'value',
         title: 'Value',
-        render: ({ scheme, schemeName }: ParsedScheme) => <Input
-          type="text"
+        render: ({ scheme, schemeName }: ParsedScheme) => <HiddenInput
           key={schemeName}
           placeholder={scheme.name ?? schemeName}
           value={getSavedCredential(schemeName, scheme, savedCreds)}

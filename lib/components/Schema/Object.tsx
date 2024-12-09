@@ -22,7 +22,10 @@ export function ObjectRows({ type, depth, spec }: ObjectRowsProps): ReactNode {
 
   return <>
     {type.underlyingObject.description && <tr>
-      <td colSpan={2} className="pl-1 py-1">
+      <td colSpan={2} className="py-1 italic" style={{
+        paddingLeft: '1em',
+        marginLeft: '15px'
+      }}>
         <MarkdownWithUrl className="text-xs">{type.underlyingObject.description}</MarkdownWithUrl>
       </td>
     </tr>}

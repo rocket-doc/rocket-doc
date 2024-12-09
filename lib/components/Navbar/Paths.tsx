@@ -78,8 +78,7 @@ export default function Paths() {
           </Tooltip>
         </div>
       </div>
-
-
+      <hr className="py-1 border-none" />
       {taglessOperations.length > 0 && taglessOperations.map(operation => (<OperationRow key={operation.path + "_" + operation.method} operation={operation} />))}
       <Collapse
         ghost

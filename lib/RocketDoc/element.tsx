@@ -57,3 +57,11 @@ const ReactiveRocketDoc: FC<ReactiveRocketDocProps> = ({ element }) => {
   />;
 
 }
+
+declare global {
+  interface Window {
+    MountRocketDoc: (e: Element) => void;
+  }
+}
+
+window.MountRocketDoc = MountRocketDoc;

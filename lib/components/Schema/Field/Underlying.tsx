@@ -20,7 +20,7 @@ export function FieldUnderlying({
       const parsedUnderlying = ParseType(o, spec, type.refStack);
       const underlyingIsObject = parsedUnderlying.underlyingObject !== undefined;
       return (<Fragment key={`oneof_${i}`}>
-        <tr className="border-b border-b-gray-300">
+        <tr className="border-b border-b-gray-300 dark:border-b-gray-600" >
           <td colSpan={underlyingIsObject ? 2 : 1} className={`pl-${2 * depth} my-1`} style={{
             paddingLeft: `${depth + 2}em`
           }}>
