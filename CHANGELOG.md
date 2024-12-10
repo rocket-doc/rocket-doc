@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+  ### Fixed
+  - Fixed issue with fields column layout on long field names
+
 ## [1.0.10] - 2024-12-08
 
   ### Features
