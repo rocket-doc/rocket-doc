@@ -15,7 +15,7 @@ type NavbarProps = {
 };
 
 const Navbar: React.FC<NavbarProps> = ({ logo, showSpecFileLoader, showClearSpec, defaultTitle }) => {
-  const { spec, setSpec } = useContext(SpecContext);
+  const { spec } = useContext(SpecContext);
   const { config, setConfig } = useContext(UserConfigContext);
 
   return (
@@ -32,15 +32,11 @@ const Navbar: React.FC<NavbarProps> = ({ logo, showSpecFileLoader, showClearSpec
           onChange={() => setConfig({ ...config, darkMode: !config.darkMode })}
           className='ml-auto'
         />
+        {showClearSpec && <ClearSpec />}
       </div>
       {showSpecFileLoader && (
         <div className='mb-1'>
           <FileLoader />
-        </div>
-      )}
-      {showClearSpec && (
-        <div className='mb-1' onClick={() => setSpec(null)}>
-          <ClearSpec />
         </div>
       )}
       <Paths />

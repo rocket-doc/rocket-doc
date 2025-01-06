@@ -67,7 +67,7 @@ export default function SearchModal() {
   }, [indexSelected, results]);
 
   return (
-    <Modal afterOpenChange={() => { inputElement?.current?.focus(); inputElement?.current?.select(); }} open={isOpen} onCancel={() => setIsOpen(false)} cancelButtonProps={{ hidden: true }} okButtonProps={{ hidden: true }} animation={null}>
+    <Modal afterOpenChange={() => { inputElement?.current?.focus(); inputElement?.current?.select(); }} open={isOpen} onCancel={() => setIsOpen(false)} cancelButtonProps={{ hidden: true }} okButtonProps={{ hidden: true }}>
       <div className="pt-3">
         <Input
           className="mt-3 w-full"
