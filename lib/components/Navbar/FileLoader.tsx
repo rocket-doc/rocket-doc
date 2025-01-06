@@ -1,7 +1,7 @@
-import { useContext } from "react";
 import { SpecContext } from "@/lib/context";
 import { IconFileArrowLeft } from "@tabler/icons-react";
-import { parse as parseYaml } from 'yaml'
+import { useContext } from "react";
+import { parse as parseYaml } from 'yaml';
 
 export function FileLoader() {
   const { setSpec } = useContext(SpecContext);

@@ -26,7 +26,7 @@ export function FieldBase({
   return (
     <>
       <tr onClick={() => setUnderlyingShowed(!underlyingShowed)} className={hasUnderlying ? "cursor-pointer " : ""}>
-        <td className={`flex items-center flex-wrap min-w-80`} style={{
+        <td className={`flex items-center flex-wrap min-w-[20vw]`} style={{
           paddingLeft: `${depth}em`
         }} >
           <div className="flex items-start">
