@@ -86,6 +86,19 @@ export function ParseType(
     };
   }
 
+  if ((schemaResolved.oneOf !== undefined && schemaResolved.oneOf.length === 1) || (schemaResolved.allOf !== undefined && schemaResolved.allOf.length === 1)) {
+    // Handle singleton oneOf & allOf as a single type
+    const simplifiedType = ParseType(schemaResolved.oneOf?.[0] ?? schemaResolved.allOf?.[0], spec);
+    return {
+      ...simplifiedType,
+      schema: {
+        ...schemaResolved,
+        ...simplifiedType.schema,
+      }
+    }
+  }
+
+
   if (schemaResolved.oneOf !== undefined) {
     return {
       fullTypeString: 'one of',
