@@ -12,9 +12,16 @@ type TryItServerProps = {
 }
 
 export function TryIt_Server({ spec, setServer }: TryItServerProps) {
-  const [serverValue, setServerValue] = useState<ServerInformations>({ baseUrl: window.location.origin });
+  const [serverValue, setServerValue] = useState<ServerInformations | null>(null);
+
+  useEffect(() => {
+    if (spec?.servers && spec?.servers.length > 0) setServerValue({ baseUrl: spec.servers[0].url ?? "" });
+    else setServerValue({ baseUrl: window.location.origin });
+  }, [spec, setServerValue]);
 
   const fullServerUrl = useMemo(() => {
+    if (serverValue === null) return;
+
     let specUrl = serverValue.baseUrl;
     if (!specUrl.startsWith('http://') && !specUrl.startsWith('https://')) {
       if (!specUrl.startsWith('/')) specUrl = '/' + specUrl;
@@ -24,6 +31,7 @@ export function TryIt_Server({ spec, setServer }: TryItServerProps) {
   }, [serverValue]);
 
   useEffect(() => {
+    if (!fullServerUrl) return;
     setServer({
       baseUrl: fullServerUrl,
     });
