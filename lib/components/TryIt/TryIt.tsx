@@ -30,6 +30,7 @@ export function TryIt({ operation, spec }: TryItProps) {
   const [responsePending, setResponsePending] = useState<boolean>(false);
   const [responseText, setResponseText] = useState<string | null>(null);
   const [responseTextPending, setResponseTextPending] = useState<boolean>(false);
+  const [elapsedTime, setElapsedTime] = useState<number | null>(null);
 
   const responseCard = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -42,6 +43,7 @@ export function TryIt({ operation, spec }: TryItProps) {
     setResponsePending(false);
     setResponseText(null);
     setResponseTextPending(false);
+    setElapsedTime(null);
   }, [operation, spec]);
 
   // Handle headers
@@ -88,28 +90,47 @@ export function TryIt({ operation, spec }: TryItProps) {
     return `${url}${query ? `?${query}` : ""}`
   }, [server, operation, query, parameters]);
 
-  const run = useCallback(() => {
+  const run = useCallback(async () => {
     if (!server) {
       return;
     }
 
+    const startTime = performance.now();
     setResponsePending(true);
     fetch(fetchUrl, fetchRequest).catch((e) => {
       setResponse(null);
       setResponseError(e ? new Error(e.toString()) : new Error("Unknown error"))
       setResponseText(null);
       setResponseTextPending(false)
+      setElapsedTime(null);
     }).then((r) => {
       setResponse(r ?? null)
       setResponseError(null);
       setResponseText(null);
       if (r) {
         setResponseTextPending(true);
+        const endTime = performance.now();
+        setElapsedTime(endTime - startTime);
         r.text().then((t) => setResponseText(t)).finally(() => setResponseTextPending(false));
       }
     }).finally(() => setResponsePending(false));
   }, [operation, fetchRequest, fetchUrl]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 'Enter' && !responsePending) {
+        e.preventDefault();
+        run();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    
+    // Clean up the event listener when component unmounts
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [run, responsePending]); // Include run and responsePending in dependencies
+  
   return (
     <div className="flex flex-col gap-2">
       <TryIt_Server spec={spec} setServer={setServer} />
@@ -137,6 +158,9 @@ export function TryIt({ operation, spec }: TryItProps) {
         {response && (
           <div>
             <p>Status Code : {response.status}</p>
+            {elapsedTime !== null && (
+                <p>Response Time: {elapsedTime.toFixed(2)} ms</p>
+              )}
             <Collapse
               items={[{
                 label: "Headers",
