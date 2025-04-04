@@ -88,7 +88,7 @@ export function TryIt({ operation, spec }: TryItProps) {
     return `${url}${query ? `?${query}` : ""}`
   }, [server, operation, query, parameters]);
 
-  const run = useCallback(() => {
+  const run = useCallback(async () => {
     if (!server) {
       return;
     }
@@ -110,6 +110,21 @@ export function TryIt({ operation, spec }: TryItProps) {
     }).finally(() => setResponsePending(false));
   }, [operation, fetchRequest, fetchUrl]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 'Enter' && !responsePending) {
+        e.preventDefault();
+        run();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    
+    // Clean up the event listener when component unmounts
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [run, responsePending]); // Include run and responsePending in dependencies
+  
   return (
     <div className="flex flex-col gap-2">
       <TryIt_Server spec={spec} setServer={setServer} />
