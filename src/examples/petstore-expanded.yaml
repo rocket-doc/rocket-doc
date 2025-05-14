@@ -1,4 +1,4 @@
-openapi: "3.0.0"
+openapi: "3.1.0"
 info:
   version: 1.0.0
   title: Swagger Petstore
@@ -64,6 +64,17 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/NewPet'
+            examples:
+              firstExample:
+                value:
+                  - name: somefirstname
+                    tag: sometag
+                  - name: somesecondname
+                    tag: sometag
+              secondExample:
+                value:
+                  - name: someyetanothername
+                    tag: sometag
       responses:
         '200':
           description: pet response

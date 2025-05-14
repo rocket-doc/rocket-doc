@@ -25,7 +25,7 @@ export function TryIt_Body({ operation, spec, setBody: setBodyParent }: TryItBod
     if (!operation || !spec || !operation.requestBody) return null;
     return GetRef(operation.requestBody, spec)[0]
   }, [operation, spec]);
-  const { bodyMediaType, bodyMediaTypes, setBodyMediaType, hasBody, body, rawBody, setBody } = useMediaTypes(operationBody, spec);
+  const { bodyMediaType, bodyMediaTypes, setBodyMediaType, currentExampleNames, setCurrentExampleNames, examples, hasBody, body, rawBody, setBody } = useMediaTypes(operationBody, spec);
   const bodyLanguage = useBodyHighlightLanguage(bodyMediaType);
 
   useEffect(() => {
@@ -36,12 +36,19 @@ export function TryIt_Body({ operation, spec, setBody: setBodyParent }: TryItBod
 
   return (
     <Card title="Body" styles={{ body: { padding: "1rem", paddingTop: 0 } }}>
-      <div className="relative mr-auto min-w-48">
+      <div className="relative flex flex-row mr-auto min-w-48 items-center my-2">
         <Select
-          className="my-2"
           options={bodyMediaTypes.map(mediaType => ({ label: mediaType, value: mediaType, }))}
           defaultValue={bodyMediaTypes[0] ?? ""}
           onChange={(v) => setBodyMediaType(v)}
+        />
+        <Select
+          className="absolute right-0 top-0"
+          value={currentExampleNames[bodyMediaType] ?? ""}
+          options={Object.entries(examples[bodyMediaType] ?? {}).map(([key,]) => ({ label: key, value: key }))}
+          onChange={(v) => {
+            setCurrentExampleNames({ ...currentExampleNames, [bodyMediaType]: v });
+          }}
         />
       </div>
       <div className="max-h-[50vh] overflow-y-auto">
@@ -112,27 +119,38 @@ function useMediaTypes(
         exampleNames[mediaType] = Object.keys(examples[mediaType])[0];
       } else if (type.example) {
         examples[mediaType] = {
-          "": {
+          "example": {
             value: type.example,
           }
         }
-        exampleNames[mediaType] = "";
+        exampleNames[mediaType] = "example";
       } else {
         examples[mediaType] = {
-          "": {
+          "generated example": {
             value: GenerateExampleStringForSchema(type.schema, spec, mediaTypeToLanguage(mediaType)),
           }
         }
-        exampleNames[mediaType] = "";
+        exampleNames[mediaType] = "generated example";
       }
-      bodies[mediaType] = examples[mediaType][exampleNames[mediaType]].value;
+
+      const value = examples[mediaType][exampleNames[mediaType]].value;
+      bodies[mediaType] = exampleToString(mediaType, value)
     });
     setExamples(examples);
     setCurrentExampleNames(exampleNames);
     setBodies(bodies);
   }, [bodyMediaTypes, operationBody, spec]);
 
-  return { bodyMediaType, bodyMediaTypes, setBodyMediaType, examples, currentExampleNames, hasBody, body: bodies[bodyMediaType] || "", rawBody: minimize(bodies[bodyMediaType], bodyMediaType), setBody: (body: string) => setBodies({ ...bodies, [bodyMediaType]: body }) };
+  // Update the body when the example name changes
+  useEffect(() => {
+    if (!bodyMediaType || !currentExampleNames[bodyMediaType]) return;
+    const example = examples[bodyMediaType][currentExampleNames[bodyMediaType]];
+    if (example) {
+      setBodies({ ...bodies, [bodyMediaType]: exampleToString(bodyMediaType, example.value) });
+    }
+  }, [currentExampleNames, bodyMediaType, examples]);
+
+  return { bodyMediaType, bodyMediaTypes, setBodyMediaType, examples, currentExampleNames, setCurrentExampleNames, hasBody, body: bodies[bodyMediaType] || "", rawBody: minimize(bodies[bodyMediaType], bodyMediaType), setBody: (body: string) => setBodies({ ...bodies, [bodyMediaType]: body }) };
 }
 
 export function mediaTypeToLanguage(mediaType: MediaType | null): Language {
@@ -164,4 +182,20 @@ function minimize(value: string, mediaType: MediaType): string {
   } catch {
     return value;
   }
+}
+
+function exampleToString(mediaType: MediaType, value: any): string {
+  if (typeof value === "string") {
+    return value;
+  }
+
+  switch (mediaTypeToLanguage(mediaType)) {
+    case Language.YAML:
+      return stringifyYAML(value, { indent: 2 });
+    case Language.XML:
+      return new XMLBuilder({ format: true }).build(value) as string;
+    case Language.JSON:
+      return JSON.stringify(value, null, 2);
+  }
+  return JSON.stringify(value, null, 2);
 }

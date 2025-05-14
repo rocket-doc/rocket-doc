@@ -9,6 +9,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   ### Fixed
   
 
+## [1.0.14] - 2025-05-14
+
+  ### Features
+
+  - Added support for single & multiple examples in request body
+
 ## [1.0.13] - 2025-03-13
   
   ### Fixed

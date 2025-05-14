@@ -14,7 +14,11 @@ export function CurlRequest({ request, url }: CurlRequestProps) {
     lines.push(`curl -X ${request.method} ${url}`);
     lines.push(...Object.entries(headers).map(([name, value]) => `-H "${name}: ${value}"`));
     if (request.body) {
-      lines.push(`-d '${JSON.stringify(request.body)}'`);
+      if (typeof request.body === "string") {
+        lines.push(`-d '${request.body}'`);
+      } else {
+        lines.push(`-d '${JSON.stringify(request.body)}'`);
+      }
     }
     return lines;
   }, [request, url]);
