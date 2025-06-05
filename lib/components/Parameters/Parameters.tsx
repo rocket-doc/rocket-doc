@@ -4,6 +4,7 @@ import { GetRef } from "@/lib/ref";
 import { Card, Table, Typography } from "antd";
 import { ParameterObject, ReferenceObject } from "openapi3-ts/oas31";
 import { useContext } from "react";
+import { MarkdownWithUrl } from "../MarkdownWithUrl";
 
 type ParametersProps = {
   parameters?: (ParameterObject | ReferenceObject)[];
@@ -24,7 +25,7 @@ export function Parameters({ parameters }: ParametersProps) {
         title: 'Parameter',
         render: (_, param) => (<>
           <Typography.Text code>{param.name}</Typography.Text>
-          {param.description && <div className="pl-2" ><small>{param.description}</small></div>}
+          {param.description && <div className="pl-2"><small><MarkdownWithUrl>{param.description}</MarkdownWithUrl></small></div>}
         </>),
         className: "!p-1",
       },
