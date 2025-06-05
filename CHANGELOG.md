@@ -9,6 +9,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   ### Fixed
   
 
+## [1.0.15] - 2025-06-05
+
+  ### Features
+
+  - Added support for markdown on parameter description
+
 ## [1.0.14] - 2025-05-14
 
   ### Features
