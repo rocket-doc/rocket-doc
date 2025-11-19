@@ -9,6 +9,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   ### Fixed
   
 
+## [1.0.16] - 2025-11-19
+
+  ### Features
+
+  - Added support for api key profiles
+
 ## [1.0.15] - 2025-06-05
 
   ### Features
