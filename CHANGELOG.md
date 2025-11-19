@@ -15,6 +15,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
   - Added support for api key profiles
 
+  ### Fixed
+
+  - Support for baseUrl ending with a slash
+
 ## [1.0.15] - 2025-06-05
 
   ### Features
