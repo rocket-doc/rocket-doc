@@ -15,6 +15,16 @@ export type AuthInformations = {
   query?: Record<string, string>;
 }
 
+export type Profile = {
+  name: string;
+  credentials: SavedCredentials;
+}
+
+export type ProfileStore = {
+  profiles: Record<string, Profile>;
+  currentProfileId: string;
+}
+
 export function addValueToSavedCreds(schemeName: string, scheme: SecuritySchemeObject, value: string, savedCreds: SavedCredentials): SavedCredentials {
   switch (scheme.type) {
     case "apiKey":
