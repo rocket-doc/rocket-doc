@@ -83,7 +83,9 @@ export function TryIt({ operation, spec }: TryItProps) {
   }), [operation, headers]);
 
   const fetchUrl = useMemo(() => {
-    let url = `${server?.baseUrl}${operation.path}`;
+    const baseUrl = server?.baseUrl?.replace(/\/$/, '') || '';
+    const path = operation.path.startsWith('/') ? operation.path : `/${operation.path}`;
+    let url = `${baseUrl}${path}`;
     const variables = Object.fromEntries(parameters.filter((p) => p.location === "path" && p.value !== "").map((p) => ([p.name, p.value])));
     url = url.replace(/\{([^}]+)\}/g, (_, name) => variables[name] ?? "");
 
@@ -124,13 +126,13 @@ export function TryIt({ operation, spec }: TryItProps) {
       }
     };
     document.addEventListener('keydown', handleKeyDown);
-    
+
     // Clean up the event listener when component unmounts
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [run, responsePending]); // Include run and responsePending in dependencies
-  
+
   return (
     <div className="flex flex-col gap-2">
       <TryIt_Server spec={spec} setServer={setServer} />
@@ -159,8 +161,8 @@ export function TryIt({ operation, spec }: TryItProps) {
           <div>
             <p>Status Code : {response.status}</p>
             {elapsedTime !== null && (
-                <p>Response Time: {elapsedTime.toFixed(2)} ms</p>
-              )}
+              <p>Response Time: {elapsedTime.toFixed(2)} ms</p>
+            )}
             <Collapse
               items={[{
                 label: "Headers",
