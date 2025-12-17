@@ -7,6 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
   ### Fixed
+
+## [1.0.17] - 2025-12-17
+
+  ### Fixed
+
+  - Fixed Try It "curl" command not quoted properly for use in shell
   
 
 ## [1.0.16] - 2025-11-19

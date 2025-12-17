@@ -11,7 +11,7 @@ export function CurlRequest({ request, url }: CurlRequestProps) {
   const headers = useMemo(() => (request.headers ?? {}) as Record<string, string>, [request.headers]);
   const curlLines = useMemo(() => {
     let lines = [];
-    lines.push(`curl -X ${request.method} ${url}`);
+    lines.push(`curl -X ${request.method} "${url}"`);
     lines.push(...Object.entries(headers).map(([name, value]) => `-H "${name}: ${value}"`));
     if (request.body) {
       if (typeof request.body === "string") {
