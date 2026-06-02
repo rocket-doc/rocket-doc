@@ -43,7 +43,7 @@ export function FieldBase({
         <td>
           {type.underlyingObjects ?
             (type.isAllOf ? "all of..." : "one of...") :
-            <ColoredType type={type.fullTypeString} rootType={type.rootType} />}
+            <><ColoredType type={type.fullTypeString} rootType={type.rootType} />{type.schema?.["x-unit"] && <span className="ml-1 text-xs text-gray-400">({type.schema["x-unit"]})</span>}</>}
         </td>
       </tr>
       <tr className={"border-b border-b-gray-300 dark:border-b-gray-600 italic " + (hasUnderlying ? "cursor-pointer " : "")}
