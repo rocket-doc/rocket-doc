@@ -1,5 +1,7 @@
 import { CodeEditor, Language } from "@/components/Code/CodeEditor";
 import { GenerateExampleStringForSchema } from "@/lib/example";
+import { JsonValue } from "@/lib/json";
+import { MediaType, MediaTypeToLanguage } from "@/lib/media_type";
 import { Operation } from "@/lib/operations";
 import { GetRef } from "@/lib/ref";
 import { Card, Select } from "antd";
@@ -8,7 +10,6 @@ import { ExampleObject, OpenAPIObject, RequestBodyObject } from "openapi3-ts/oas
 import { useEffect, useMemo, useState } from "react";
 import { parse as parseYAML, stringify as stringifyYAML } from 'yaml';
 
-export type MediaType = string;
 export type RequestBody = {
   body: string;
   mediaType: MediaType;
@@ -26,11 +27,11 @@ export function TryIt_Body({ operation, spec, setBody: setBodyParent }: TryItBod
     return GetRef(operation.requestBody, spec)[0]
   }, [operation, spec]);
   const { bodyMediaType, bodyMediaTypes, setBodyMediaType, currentExampleNames, setCurrentExampleNames, examples, hasBody, body, rawBody, setBody } = useMediaTypes(operationBody, spec);
-  const bodyLanguage = useBodyHighlightLanguage(bodyMediaType);
+  const bodyLanguage = useMemo(() => MediaTypeToLanguage(bodyMediaType), [bodyMediaType]);
 
   useEffect(() => {
     setBodyParent({ body: rawBody, mediaType: bodyMediaType });
-  }, [rawBody, bodyMediaType]);
+  }, [rawBody, bodyMediaType, setBodyParent]);
 
   if (!hasBody) return null;
 
@@ -58,16 +59,6 @@ export function TryIt_Body({ operation, spec, setBody: setBodyParent }: TryItBod
   )
 }
 
-function useBodyHighlightLanguage(bodyMediaType: MediaType | null) {
-  const [bodyLanguage, setBodyLanguage] = useState<Language>(Language.PLAIN);
-
-  useEffect(() => {
-    setBodyLanguage(mediaTypeToLanguage(bodyMediaType));
-  }, [bodyMediaType]);
-
-  return bodyLanguage;
-}
-
 function useMediaTypes(
   operationBody: RequestBodyObject | null,
   spec: OpenAPIObject | null,
@@ -87,7 +78,7 @@ function useMediaTypes(
     }
 
     setHasBody(true);
-    let mediaTypes: MediaType[] = Object.keys(operationBody.content);
+    const mediaTypes: MediaType[] = Object.keys(operationBody.content);
     setBodyMediaTypes(mediaTypes);
     if (mediaTypes.length > 0 && (!bodyMediaType || !mediaTypes.includes(bodyMediaType))) {
       setBodyMediaType(mediaTypes[0]);
@@ -102,9 +93,9 @@ function useMediaTypes(
       return;
     };
 
-    let examples: Record<MediaType, Record<string, ExampleObject>> = {};
-    let exampleNames: Record<MediaType, string> = {};
-    let bodies: Record<MediaType, string> = {};
+    const examples: Record<MediaType, Record<string, ExampleObject>> = {};
+    const exampleNames: Record<MediaType, string> = {};
+    const bodies: Record<MediaType, string> = {};
 
     bodyMediaTypes.forEach(mediaType => {
       const type = operationBody.content[mediaType]
@@ -127,13 +118,13 @@ function useMediaTypes(
       } else {
         examples[mediaType] = {
           "generated example": {
-            value: GenerateExampleStringForSchema(type.schema, spec, mediaTypeToLanguage(mediaType)),
+            value: GenerateExampleStringForSchema(type.schema, spec, MediaTypeToLanguage(mediaType)),
           }
         }
         exampleNames[mediaType] = "generated example";
       }
 
-      const value = examples[mediaType][exampleNames[mediaType]].value;
+      const value = examples[mediaType][exampleNames[mediaType]].value as JsonValue;
       bodies[mediaType] = exampleToString(mediaType, value)
     });
     setExamples(examples);
@@ -146,35 +137,21 @@ function useMediaTypes(
     if (!bodyMediaType || !currentExampleNames[bodyMediaType]) return;
     const example = examples[bodyMediaType][currentExampleNames[bodyMediaType]];
     if (example) {
-      setBodies({ ...bodies, [bodyMediaType]: exampleToString(bodyMediaType, example.value) });
+      setBodies((bodies) => ({ ...bodies, [bodyMediaType]: exampleToString(bodyMediaType, example.value as JsonValue) }));
     }
   }, [currentExampleNames, bodyMediaType, examples]);
 
   return { bodyMediaType, bodyMediaTypes, setBodyMediaType, examples, currentExampleNames, setCurrentExampleNames, hasBody, body: bodies[bodyMediaType] || "", rawBody: minimize(bodies[bodyMediaType], bodyMediaType), setBody: (body: string) => setBodies({ ...bodies, [bodyMediaType]: body }) };
 }
 
-export function mediaTypeToLanguage(mediaType: MediaType | null): Language {
-  switch (mediaType) {
-    case "application/json":
-      return Language.JSON;
-    case "application/xml":
-      return Language.XML;
-    default:
-      return Language.PLAIN;
-  }
-}
-
 function minimize(value: string, mediaType: MediaType): string {
   try {
-    switch (mediaType) {
-      case "application/json":
+    switch (MediaTypeToLanguage(mediaType)) {
+      case Language.JSON:
         return JSON.stringify(JSON.parse(value));
-      case "application/xml":
+      case Language.XML:
         return (new XMLBuilder()).build((new XMLParser()).parse(value)) as string;
-      case "application/yaml":
-      case "application/yml":
-      case "application/x-yaml":
-      case "text/yaml":
+      case Language.YAML:
         return stringifyYAML(parseYAML(value));
       default:
         return value;
@@ -184,12 +161,12 @@ function minimize(value: string, mediaType: MediaType): string {
   }
 }
 
-function exampleToString(mediaType: MediaType, value: any): string {
+function exampleToString(mediaType: MediaType, value: JsonValue): string {
   if (typeof value === "string") {
     return value;
   }
 
-  switch (mediaTypeToLanguage(mediaType)) {
+  switch (MediaTypeToLanguage(mediaType)) {
     case Language.YAML:
       return stringifyYAML(value, { indent: 2 });
     case Language.XML:

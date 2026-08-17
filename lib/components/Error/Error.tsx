@@ -15,7 +15,7 @@ export function Error({ title, message }: ErrorProps) {
     </div>);
 }
 
-export let ErrorBoundary: ComponentType = () => {
+export const ErrorBoundary: ComponentType = () => {
   const error = useRouteError();
   if (!error) return null;
   return <Error message={error.toString()} />

@@ -1,5 +1,5 @@
-import { Card, Select } from "antd";
-import { OpenAPIObject } from "openapi3-ts/oas31";
+import { Card, Input, Select } from "antd";
+import { ServerObject } from "openapi3-ts/oas31";
 import { useEffect, useMemo, useState } from "react";
 
 export type ServerInformations = {
@@ -7,52 +7,83 @@ export type ServerInformations = {
 }
 
 type TryItServerProps = {
-  spec: OpenAPIObject | null;
-  setServer: (auth: ServerInformations | null) => void;
+  // Servers applying to the operation (operation, path item or spec level)
+  servers?: ServerObject[];
+  setServer: (server: ServerInformations | null) => void;
 }
 
-export function TryIt_Server({ spec, setServer }: TryItServerProps) {
-  const [serverValue, setServerValue] = useState<ServerInformations | null>(null);
+function defaultVariableValues(server: ServerObject | undefined): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(server?.variables ?? {}).map(([name, variable]) => [name, String(variable.default ?? "")])
+  );
+}
+
+// Replaces the `{variable}` placeholders of a server URL and makes it absolute
+function resolveServerUrl(url: string, variables: Record<string, string>): string {
+  let resolved = url.replace(/\{([^}]+)\}/g, (match, name) => variables[name] ?? match);
+  if (!/^https?:\/\//.test(resolved)) {
+    if (!resolved.startsWith('/')) resolved = '/' + resolved;
+    resolved = window.location.origin + resolved;
+  }
+  return resolved;
+}
+
+export function TryIt_Server({ servers, setServer }: TryItServerProps) {
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [variables, setVariables] = useState<Record<string, string>>({});
+
+  const selectedServer = servers?.[selectedIndex];
 
   useEffect(() => {
-    if (spec?.servers && spec?.servers.length > 0) setServerValue({ baseUrl: spec.servers[0].url ?? "" });
-    else setServerValue({ baseUrl: window.location.origin });
-  }, [spec, setServerValue]);
-
-  const fullServerUrl = useMemo(() => {
-    if (serverValue === null) return;
-
-    let specUrl = serverValue.baseUrl;
-    if (!specUrl.startsWith('http://') && !specUrl.startsWith('https://')) {
-      if (!specUrl.startsWith('/')) specUrl = '/' + specUrl;
-      specUrl = window.location.origin + specUrl;
-    }
-    return specUrl;
-  }, [serverValue]);
+    setSelectedIndex(0);
+  }, [servers]);
 
   useEffect(() => {
-    if (!fullServerUrl) return;
-    setServer({
-      baseUrl: fullServerUrl,
-    });
-  }, [fullServerUrl]);
+    setVariables(defaultVariableValues(selectedServer));
+  }, [selectedServer]);
 
+  const fullServerUrl = useMemo(
+    () => resolveServerUrl(selectedServer?.url ?? window.location.origin, variables),
+    [selectedServer, variables]
+  );
 
-  if (!spec?.servers || spec.servers.length === 0) return null;
-  if (spec.servers.length === 1) return <small>Server URL: {fullServerUrl}</small>;
+  useEffect(() => {
+    setServer({ baseUrl: fullServerUrl });
+  }, [fullServerUrl, setServer]);
+
+  const variableEntries = Object.entries(selectedServer?.variables ?? {});
+  if (!servers?.length) return null;
+  if (servers.length === 1 && variableEntries.length === 0) return <small>Server URL: {fullServerUrl}</small>;
+
   return (
-    <Card title="Server" className="" styles={{ body: { padding: "1rem", paddingTop: '0.5rem' } }}>
-      <Select
-        options={spec.servers.map((server, i) => ({
+    <Card title="Server" styles={{ body: { padding: "1rem", paddingTop: '0.5rem' } }}>
+      {servers.length > 1 && <Select
+        options={servers.map((server, i) => ({
           label: (server.url + (server.description ? ` (${server.description})` : "")) || `Current server (${i})`,
           value: i,
         }))}
-        defaultValue={0}
-        onChange={(v) => setServerValue({
-          baseUrl: spec.servers![v].url ?? ""
-        })}
-        className="mb-2"
-      />
-      <br /><small>Server URL: {fullServerUrl}</small>
+        value={selectedIndex}
+        onChange={setSelectedIndex}
+        className="mb-2 w-full"
+      />}
+      {variableEntries.map(([name, variable]) => (
+        <div key={name} className="mb-2 flex items-center gap-2">
+          <span className="text-sm font-mono">{name}</span>
+          {variable.enum?.length
+            ? <Select
+              className="flex-1"
+              options={variable.enum.map((value) => ({ label: value, value }))}
+              value={variables[name] ?? ""}
+              onChange={(value) => setVariables((previous) => ({ ...previous, [name]: value }))}
+            />
+            : <Input
+              className="flex-1"
+              value={variables[name] ?? ""}
+              placeholder={variable.description ?? name}
+              onChange={(e) => setVariables((previous) => ({ ...previous, [name]: e.target.value }))}
+            />}
+        </div>
+      ))}
+      <small>Server URL: {fullServerUrl}</small>
     </Card>)
 }

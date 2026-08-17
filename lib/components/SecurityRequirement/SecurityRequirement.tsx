@@ -1,4 +1,4 @@
-import { Table } from "antd";
+import { Table, Tooltip } from "antd";
 import { SecurityRequirementObject, SecuritySchemeObject } from "openapi3-ts/oas31";
 import { useEffect } from "react";
 import { HiddenInput } from "./HiddenInput";
@@ -24,26 +24,35 @@ export default function SecurityRequirement({ requirement, schemes, savedCreds, 
   useEffect(() => {
     if (!initialValues) return
     let newSavedCreds = { ...savedCreds }
-    Object.entries(requirement).forEach(([schemeName, _]) => {
+    Object.keys(requirement).forEach((schemeName) => {
       const scheme = schemes[schemeName]
+      if (!scheme) return
       const credsType = schemeToCredentialType(scheme)
       if (!credsType) return
-      if (!getSavedCredential(schemeName, scheme, savedCreds) && initialValues[credsType]) {
-        newSavedCreds = addValueToSavedCreds(schemeName, scheme, initialValues[credsType], savedCreds)
+      const initialValue = initialValues[credsType]
+      if (!getSavedCredential(schemeName, scheme, savedCreds) && initialValue) {
+        newSavedCreds = addValueToSavedCreds(schemeName, scheme, initialValue, newSavedCreds)
       }
     })
 
     setSavedCreds(newSavedCreds)
+    // Initial values are only applied once, when the requirement is first rendered
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (<Table<ParsedScheme>
     pagination={false}
-    dataSource={Object.entries(requirement).map(([scheme, scopes]) => ({ key: schemes[scheme]?.name, schemeName: scheme, scheme: schemes[scheme], scopes } as ParsedScheme))}
+    dataSource={Object.entries(requirement)
+      .filter(([scheme]) => schemes[scheme])
+      .map(([scheme, scopes]) => ({ key: scheme, schemeName: scheme, scheme: schemes[scheme], scopes } as ParsedScheme))}
     columns={[
       {
         key: 'scheme',
         title: 'Scheme',
-        render: ({ schemeName, scheme }: ParsedScheme) => <span key={schemeName} >{typeAsName ? scheme.type : <>{schemeName}{scheme.name && ` (${scheme.name})`}</>}</span>
+        render: ({ schemeName, scheme, scopes }: ParsedScheme) => (<span key={schemeName}>
+          {typeAsName ? scheme.type : <>{schemeName}{scheme.name && ` (${scheme.name})`}</>}
+          {scopes?.length > 0 && <Tooltip title={`Scopes: ${scopes.join(", ")}`}><small className="ml-1 opacity-60">{scopes.length} scope{scopes.length > 1 ? "s" : ""}</small></Tooltip>}
+        </span>)
       },
       {
         key: 'value',

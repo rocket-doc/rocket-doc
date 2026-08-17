@@ -32,7 +32,7 @@ export function TryIt_Parameters({ operation, spec, setParams: setParentParams }
 
   useEffect(() => {
     setParentParams(Object.values(params));
-  }, [params]);
+  }, [params, setParentParams]);
 
   if (!operationParameters || !spec) return null;
   return <Table<ParameterObject>
@@ -77,6 +77,7 @@ function TryIt_Parameter({ parameter, spec, paramValue, setParam }: TryItParamet
   useEffect(() => {
     if (schema?.type !== "object") setParamValue(parameter.example?.toString() || "");
     else setParamValue(GenerateExampleStringForSchema(schema, spec, Language.JSON))
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only reset the value when the schema changes
   }, [schema]);
 
   if (!schema || schema.type === "null") return null;
@@ -84,30 +85,31 @@ function TryIt_Parameter({ parameter, spec, paramValue, setParam }: TryItParamet
 }
 
 function TryIt_ParameterWithMediaTypes({ parameter, spec, setParam }: TryItParameterProps) {
-  const [values, setValues] = useState<Record<string, any>>({});
+  const [values, setValues] = useState<Record<string, string>>({});
   const [mediaType, setMediaType] = useState("");
 
   useEffect(() => {
-    setParam({ name: parameter.name, value: values[mediaType] ?? "", location: parameter.in });
+    setParam({ name: parameter.name, value: values[mediaType] ?? "", location: parameter.in, mediaType });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the parameter identity is stable for a given operation
   }, [values, mediaType]);
 
   const schemas = useMemo(() => {
     if (!parameter.content) return null;
     return Object.fromEntries(
-      Object.entries(parameter.content).map(([mediaType, content]) => { return [mediaType, GetRef(content.schema, spec)[0]] }).filter(([_, schema]) => schema)
+      Object.entries(parameter.content)
+        .map(([mediaType, content]) => [mediaType, GetRef(content.schema, spec)[0]] as const)
+        .filter(([, schema]) => schema)
     ) as Record<string, SchemaObject>;
-  }, []);
+  }, [parameter.content, spec]);
 
   useEffect(() => {
     if (schemas && Object.keys(schemas).length > 0) {
       setMediaType(Object.keys(schemas)[0]);
-      let values: Record<string, any> = {};
-      Object.entries(schemas).forEach(([mediaType, schema]) => {
-        values[mediaType] = GenerateExampleStringForSchema(schema, spec, Language.JSON)
-      });
-      setValues(values);
+      setValues(Object.fromEntries(
+        Object.entries(schemas).map(([mediaType, schema]) => [mediaType, GenerateExampleStringForSchema(schema, spec, Language.JSON)])
+      ));
     }
-  }, [schemas]);
+  }, [schemas, spec]);
 
   if (!schemas || Object.keys(schemas).length === 0) return null;
   return (<>
@@ -122,19 +124,19 @@ function TryIt_ParameterWithMediaTypes({ parameter, spec, setParam }: TryItParam
 
 type EditorProps = {
   type: SchemaObjectType | SchemaObjectType[] | undefined;
-  value: any;
-  setValue: (value: any) => void;
+  value: string;
+  setValue: (value: string) => void;
 }
 
 function Editor({ type, value, setValue }: EditorProps) {
-  switch (type) {
+  switch (Array.isArray(type) ? type[0] : type) {
     case "string":
       return <Input placeholder="string" type="text" value={value} onChange={(e) => setValue(e.target.value)} />;
     case "number":
     case "integer":
       return <Input placeholder="number" type="number" value={value} onChange={(e) => setValue(e.target.value)} />;
     case "boolean":
-      return <Checkbox checked={value} onChange={(e) => setValue(e.target.checked)} />;
+      return <Checkbox checked={value === "true"} onChange={(e) => setValue(String(e.target.checked))} />;
     case "object":
       return <CodeEditor code={value || ""} setCode={(v) => setValue(v)} language={Language.JSON} />;
     case "array":
