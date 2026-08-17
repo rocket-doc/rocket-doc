@@ -1,21 +1,30 @@
+import { MethodBadge } from "@/components/MethodBadge";
 import { ModalContext, SpecContext } from "@/lib/context";
-import { ExtractOperations, Operation } from "@/lib/operations";
-import { Input, InputRef, Modal } from "antd";
-import { useContext, useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { ExtractOperations, ExtractWebhooks, FlattenOperations, Operation, OperationRoute } from "@/lib/operations";
+import { Empty, Input, InputRef, Modal, Tag } from "antd";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+
+const maxResults = 50;
 
 export default function SearchModal() {
   const { spec } = useContext(SpecContext);
   const [isOpen, setIsOpen] = useState(false);
   const { isOpen: isGlobalModalOpen, setIsOpen: setIsGlobalModalOpen } = useContext(ModalContext);
-  const navigate = useNavigate()
 
-  const [results, setResults] = useState<Operation[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const [indexSelected, setIndexSelected] = useState(0);
 
   const inputElement = useRef<InputRef>(null);
   const selectedResultElement = useRef<HTMLAnchorElement>(null);
+
+  const results = useMemo<Operation[]>(() => {
+    if (!spec || !searchValue) return [];
+    return [
+      ...FlattenOperations(ExtractOperations(spec, searchValue)),
+      ...FlattenOperations(ExtractWebhooks(spec, searchValue)),
+    ].slice(0, maxResults);
+  }, [searchValue, spec]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -27,12 +36,15 @@ export default function SearchModal() {
         event.preventDefault();
         setIsOpen(true);
         return;
-      };
-      if (isOpen && event.key === "Enter" && selectedResultElement.current) {
+      }
+      if (!isOpen) return;
+      if (event.key === "Enter" && selectedResultElement.current) {
         selectedResultElement.current.click();
-      } else if (isOpen && event.key === "ArrowDown") {
+      } else if (event.key === "ArrowDown") {
+        event.preventDefault();
         setIndexSelected((index) => Math.min(index + 1, results.length - 1));
-      } else if (isOpen && event.key === "ArrowUp") {
+      } else if (event.key === "ArrowUp") {
+        event.preventDefault();
         setIndexSelected((index) => Math.max(index - 1, 0));
       }
     };
@@ -41,54 +53,55 @@ export default function SearchModal() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen, results, indexSelected, navigate, isGlobalModalOpen]);
+  }, [isOpen, results, isGlobalModalOpen]);
 
   useEffect(() => {
-    if (!selectedResultElement.current) return;
-    selectedResultElement.current.scrollIntoView({ block: "nearest" });
-
-  }, [selectedResultElement, indexSelected]);
+    selectedResultElement.current?.scrollIntoView({ block: "nearest" });
+  }, [indexSelected, results]);
 
   useEffect(() => {
     setIsGlobalModalOpen(isOpen);
   }, [isOpen, setIsGlobalModalOpen]);
 
   useEffect(() => {
-    if (!spec) return;
-    if (!searchValue) setResults([]);
-
-    setResults(ExtractOperations(spec.paths ?? {}, searchValue).map(({ operations }) => operations).flat());
-  }, [searchValue, spec]);
-
-  useEffect(() => {
-    if (indexSelected > results.length - 1) {
-      setIndexSelected(0);
-    }
-  }, [indexSelected, results]);
+    setIndexSelected(0);
+  }, [results]);
 
   return (
-    <Modal afterOpenChange={() => { inputElement?.current?.focus(); inputElement?.current?.select(); }} open={isOpen} onCancel={() => setIsOpen(false)} cancelButtonProps={{ hidden: true }} okButtonProps={{ hidden: true }}>
+    <Modal
+      afterOpenChange={() => { inputElement?.current?.focus(); inputElement?.current?.select(); }}
+      open={isOpen}
+      onCancel={() => setIsOpen(false)}
+      cancelButtonProps={{ hidden: true }}
+      okButtonProps={{ hidden: true }}
+    >
       <div className="pt-3">
         <Input
           className="mt-3 w-full"
           ref={inputElement}
-          placeholder="Search a route by path or tag"
+          placeholder="Search by path, method, summary, operation id or tag"
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
           allowClear
           onClear={() => setSearchValue("")}
         />
-        <div className="max-h-[30vh] overflow-y-auto mt-3">
-          {/* Search results */}
-          {results.map(({ path, method }, i) => (
+        <div className="max-h-[40vh] overflow-y-auto mt-3 rd-scroll">
+          {searchValue && results.length === 0 && <Empty description="No operation found" />}
+          {results.map((operation, i) => (
             <Link
-              key={`${method}-${path}`}
-              to={`/operations/${method}/${encodeURIComponent(path)}`}
-              className={"block p-2 dark:hover:text-gray-400" + (i === indexSelected ? " bg-gray-300 dark:bg-gray-700" : "")}
+              key={operation.id}
+              to={OperationRoute(operation)}
+              className={"flex flex-col gap-0.5 p-2 rounded-md dark:hover:text-gray-400" + (i === indexSelected ? " bg-gray-200 dark:bg-gray-700" : "")}
               onClick={() => setIsOpen(false)}
               ref={i === indexSelected ? selectedResultElement : null}
+              onMouseEnter={() => setIndexSelected(i)}
             >
-              <span className="uppercase">{method}</span> {path}
+              <span className="flex items-center gap-2">
+                <MethodBadge method={operation.method} />
+                <span className="font-mono text-sm break-all">{operation.path}</span>
+                {operation.kind === "webhook" && <Tag color="geekblue" className="m-0">webhook</Tag>}
+              </span>
+              {operation.summary && <small className="opacity-70 pl-1">{operation.summary}</small>}
             </Link>
           ))}
         </div>

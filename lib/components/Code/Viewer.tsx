@@ -41,10 +41,10 @@ export function CodeViewer({
         default:
           setCodeFormatted(code);
       }
-    } catch (error) {
-      setCodeFormatted(code);
+    } catch {
+      setCodeFormatted(code); // Show the raw content when it cannot be formatted
     }
-  }, [code]);
+  }, [code, language]);
 
   return (<div className="relative">
     <Copy text={codeFormatted} />

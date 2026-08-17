@@ -1,3 +1,4 @@
+import { langMap, Language } from '@/lib/language';
 import Prism from 'prismjs';
 import 'prismjs/components/prism-bash';
 import 'prismjs/components/prism-json';
@@ -6,13 +7,7 @@ import 'prismjs/components/prism-yaml';
 import 'prismjs/themes/prism-tomorrow.css';
 import Editor from 'react-simple-code-editor';
 
-export enum Language {
-  JSON = 'json',
-  XML = 'xml',
-  YAML = 'yaml',
-  PLAIN = 'plain',
-  BASH = 'bash',
-}
+export { langMap, Language };
 
 type CodeEditorProps = {
   code: string;
@@ -26,14 +21,6 @@ export const grammarMap: Record<Language, Prism.Grammar> = {
   [Language.PLAIN]: Prism.languages.plain,
   [Language.YAML]: Prism.languages.yaml,
   [Language.BASH]: Prism.languages.bash
-}
-
-export const langMap: Record<Language, string> = {
-  [Language.JSON]: 'json',
-  [Language.XML]: 'xml',
-  [Language.PLAIN]: 'plain',
-  [Language.YAML]: 'yaml',
-  [Language.BASH]: 'bash'
 }
 
 export function CodeEditor({

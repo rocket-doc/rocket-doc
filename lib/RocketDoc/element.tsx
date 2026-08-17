@@ -1,3 +1,4 @@
+import { Extensions } from "@/lib/config";
 import { FC, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import RocketDoc, { AppProps } from "./RocketDoc";
@@ -12,7 +13,7 @@ function parseJSONBestEffort<T>(json: string | null): T | undefined {
   if (!json) return undefined;
 
   try {
-    return JSON.parse(json);
+    return JSON.parse(json) as T;
   } catch (e) {
     console.error("Failed to parse JSON", e);
     return undefined;
@@ -28,11 +29,16 @@ function rocketPropsFromElement(rocketDoc: Element): AppProps {
     specRequiredSecurityScopes: rocketDoc.getAttribute("spec-required-security-scopes")?.split(",") ?? undefined,
     config: parseJSONBestEffort(rocketDoc.getAttribute("config")),
     extensions: {
-      fieldDetails: rocketDoc.hasAttribute("extensions-field-details")
-        ? (window as any)[rocketDoc.getAttribute("extensions-field-details")!]
-        : undefined,
+      fieldDetails: fieldDetailsExtension(rocketDoc.getAttribute("extensions-field-details")),
     }
   };
+}
+
+// Extensions are exposed by the host page as global variables
+function fieldDetailsExtension(globalName: string | null): Extensions['fieldDetails'] {
+  if (!globalName) return undefined;
+  const extension = (window as unknown as Record<string, unknown>)[globalName];
+  return typeof extension === 'function' ? (extension as Extensions['fieldDetails']) : undefined;
 }
 
 type ReactiveRocketDocProps = {
@@ -50,7 +56,8 @@ const ReactiveRocketDoc: FC<ReactiveRocketDocProps> = ({ element }) => {
     })
 
     observer.observe(element, { attributes: true });
-  }, [])
+    return () => observer.disconnect();
+  }, [element])
 
   return <RocketDoc
     {...rocketProps}

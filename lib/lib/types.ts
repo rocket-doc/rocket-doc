@@ -3,9 +3,10 @@ import {
   ReferenceObject,
   SchemaObject,
 } from 'openapi3-ts/oas31';
+import { JsonValue } from './json';
 import { GetRef } from './ref';
 
-export type EnumDetail = { varname: string, description?: string, value: any };
+export type EnumDetail = { varname: string, description?: string, value: JsonValue };
 
 export type ParsedType = {
   fullTypeString: string;

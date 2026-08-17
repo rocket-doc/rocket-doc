@@ -36,7 +36,7 @@ export function addValueToSavedCreds(schemeName: string, scheme: SecuritySchemeO
         }
       }
     case "http":
-      switch (scheme.scheme) {
+      switch (scheme.scheme?.toLowerCase()) {
         case "basic":
           return {
             ...savedCreds,
@@ -68,11 +68,11 @@ export function schemeToCredentialType(scheme: SecuritySchemeObject): Credential
     case "apiKey":
       return "apiKey";
     case "http":
-      switch (scheme.scheme) {
+      switch (scheme.scheme?.toLowerCase()) {
         case "basic":
           return "basicAuth";
         case "bearer":
-          return
+          return "bearerAuth";
         default:
           console.warn("Unsupported http scheme", scheme.scheme)
           return undefined
@@ -118,7 +118,7 @@ export function updateAuthValueFromSchemeValue(schemeName: string, scheme: Secur
           return authValue;
       }
     case "http":
-      switch (scheme.scheme) {
+      switch (scheme.scheme?.toLowerCase()) {
         case "basic":
           return {
             ...authValue,

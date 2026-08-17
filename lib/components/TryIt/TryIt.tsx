@@ -1,15 +1,24 @@
 import { CodeViewer } from "@/components/Code/Viewer";
 import { AuthInformations } from "@/components/SecurityRequirement/schemes";
+import { MediaTypeToLanguage } from "@/lib/media_type";
 import { Operation } from "@/lib/operations";
 import { IconRocket } from "@tabler/icons-react";
-import { Button, Card, Collapse, Spin } from "antd";
+import { Alert, Button, Card, Collapse, Spin, Tag } from "antd";
 import { OpenAPIObject } from "openapi3-ts/oas31";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { TryIt_Auth } from "./Auth";
-import { mediaTypeToLanguage, RequestBody, TryIt_Body } from "./Body";
+import { RequestBody, TryIt_Body } from "./Body";
 import { CurlRequest } from "./Curl";
 import { RequestParam, TryIt_Parameters } from "./Parameters";
 import { ServerInformations, TryIt_Server } from "./Server";
+
+function statusColor(status: number): string {
+  if (status < 200) return "blue";
+  if (status < 300) return "green";
+  if (status < 400) return "cyan";
+  if (status < 500) return "orange";
+  return "red";
+}
 
 type TryItProps = {
   operation: Operation;
@@ -48,7 +57,7 @@ export function TryIt({ operation, spec }: TryItProps) {
 
   // Handle headers
   useEffect(() => {
-    let newHeaders: Record<string, string> = {};
+    const newHeaders: Record<string, string> = {};
     if (body && body.mediaType !== "") {
       newHeaders["Content-Type"] = body.mediaType;
     }
@@ -57,7 +66,7 @@ export function TryIt({ operation, spec }: TryItProps) {
       newHeaders[p.name] = p.value;
     });
 
-    auth?.headers && Object.entries(auth.headers).forEach(([name, value]) => {
+    Object.entries(auth?.headers ?? {}).forEach(([name, value]) => {
       newHeaders[name] = value as string;
     });
 
@@ -66,21 +75,21 @@ export function TryIt({ operation, spec }: TryItProps) {
 
   // Handle query
   useEffect(() => {
-    let newQueryParams = new URLSearchParams();
+    const newQueryParams = new URLSearchParams();
     parameters.filter((p) => p.location === "query" && p.value !== "").forEach((p) => {
       newQueryParams.set(p.name, p.value);
     });
-    auth?.query && Object.entries(auth.query).forEach(([name, value]) => {
+    Object.entries(auth?.query ?? {}).forEach(([name, value]) => {
       newQueryParams.set(name, value as string);
     });
     setQuery(newQueryParams.toString());
-  }, [parameters]);
+  }, [parameters, auth]);
 
   const fetchRequest = useMemo<RequestInit>(() => ({
     method: operation.method.toUpperCase(),
     headers: headers,
     body: body?.body,
-  }), [operation, headers]);
+  }), [operation, headers, body]);
 
   const fetchUrl = useMemo(() => {
     const baseUrl = server?.baseUrl?.replace(/\/$/, '') || '';
@@ -99,24 +108,28 @@ export function TryIt({ operation, spec }: TryItProps) {
 
     const startTime = performance.now();
     setResponsePending(true);
-    fetch(fetchUrl, fetchRequest).catch((e) => {
-      setResponse(null);
-      setResponseError(e ? new Error(e.toString()) : new Error("Unknown error"))
-      setResponseText(null);
-      setResponseTextPending(false)
-      setElapsedTime(null);
-    }).then((r) => {
-      setResponse(r ?? null)
+    setResponseText(null);
+    try {
+      const response = await fetch(fetchUrl, fetchRequest);
+      setElapsedTime(performance.now() - startTime);
+      setResponse(response);
       setResponseError(null);
-      setResponseText(null);
-      if (r) {
-        setResponseTextPending(true);
-        const endTime = performance.now();
-        setElapsedTime(endTime - startTime);
-        r.text().then((t) => setResponseText(t)).finally(() => setResponseTextPending(false));
+      setResponseTextPending(true);
+      try {
+        setResponseText(await response.text());
+      } finally {
+        setResponseTextPending(false);
       }
-    }).finally(() => setResponsePending(false));
-  }, [operation, fetchRequest, fetchUrl]);
+    } catch (e) {
+      setResponse(null);
+      setResponseError(e instanceof Error ? e : new Error(String(e) || "Unknown error"));
+      setResponseText(null);
+      setResponseTextPending(false);
+      setElapsedTime(null);
+    } finally {
+      setResponsePending(false);
+    }
+  }, [server, fetchRequest, fetchUrl]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -135,7 +148,7 @@ export function TryIt({ operation, spec }: TryItProps) {
 
   return (
     <div className="flex flex-col gap-2">
-      <TryIt_Server spec={spec} setServer={setServer} />
+      <TryIt_Server servers={operation.servers} setServer={setServer} />
       <TryIt_Auth operation={operation} spec={spec} setAuth={setAuth} />
       <TryIt_Parameters
         operation={operation}
@@ -155,14 +168,14 @@ export function TryIt({ operation, spec }: TryItProps) {
         }]}
       />
       <Button className="mx-auto p-5" onClick={run} disabled={responsePending}><IconRocket /> Run request</Button>
-      {(response || responsePending) && <Card title="Response" ref={responseCard}>
+      {(response || responsePending || responseError) && <Card title="Response" ref={responseCard}>
         {responsePending && <div> <Spin /> Waiting for response...</div>}
         {response && (
-          <div>
-            <p>Status Code : {response.status}</p>
-            {elapsedTime !== null && (
-              <p>Response Time: {elapsedTime.toFixed(2)} ms</p>
-            )}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <Tag color={statusColor(response.status)} className="m-0 font-mono">{response.status} {response.statusText}</Tag>
+              {elapsedTime !== null && <span className="text-xs opacity-60">{elapsedTime.toFixed(0)} ms</span>}
+            </div>
             <Collapse
               items={[{
                 label: "Headers",
@@ -175,14 +188,11 @@ export function TryIt({ operation, spec }: TryItProps) {
               }]}
             />
             {responseTextPending && <div><Spin /> Loading body...</div>}
-            {responseText && <CodeViewer code={responseText} language={mediaTypeToLanguage(response.headers.get("content-type"))} />}
+            {responseText && <CodeViewer code={responseText} language={MediaTypeToLanguage(response.headers.get("content-type"))} />}
           </div>
         )}
         {responseError && (
-          <div>
-            <h2>Error</h2>
-            <pre>{responseError.message}</pre>
-          </div>
+          <Alert type="error" showIcon message="Request failed" description={responseError.message} />
         )}
       </Card>}
     </div>
