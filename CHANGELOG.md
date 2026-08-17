@@ -8,6 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
   ### Fixed
 
+## [1.1.0] - 2026-06-16
+
+  - Major refactoring and code quality improement
+  - Added standalone package
+  - Added key management page in sidebar
+  - Some minor UI changes
+
 ## [1.0.18] - 2026-06-16
 
   ### Features
